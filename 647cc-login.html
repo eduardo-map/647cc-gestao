@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>647CC · Gestão de Obra</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --azul:       #06428E;
+      --azul-dk:    #04316A;
+      --azul-lt:    #2E86F6;
+      --azul-bg:    #B9D6FC;
+      --vermelho:   #CB0935;
+      --cinza-900:  #171717;
+      --cinza-700:  #3A3A3A;
+      --cinza-400:  #8A8A8A;
+      --cinza-200:  #E8E8E8;
+      --cinza-100:  #F5F7FA;
+      --branco:     #FFFFFF;
+      --erro:       #CB0935;
+      --sucesso:    #196B24;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cinza-100);
+      color: var(--cinza-900);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--branco);
+      border: 1px solid var(--cinza-200);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(6,66,142,0.08);
+    }
+
+    .card-topo {
+      background: var(--azul);
+      padding: 32px 36px 28px;
+      position: relative;
+    }
+
+    .card-topo::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--vermelho);
+    }
+
+    .logo-empresa {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.6);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .logo-titulo {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--branco);
+      line-height: 1.2;
+    }
+
+    .logo-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      margin-top: 5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .card-corpo {
+      padding: 32px 36px 36px;
+    }
+
+    .campo { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--cinza-700);
+      margin-bottom: 7px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    input {
+      width: 100%;
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 6px;
+      padding: 12px 14px;
+      color: var(--cinza-900);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--azul);
+      box-shadow: 0 0 0 3px rgba(6,66,142,0.1);
+      background: var(--branco);
+    }
+
+    input::placeholder { color: var(--cinza-400); }
+
+    .btn-entrar {
+      width: 100%;
+      background: var(--azul);
+      color: var(--branco);
+      border: none;
+      border-radius: 6px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.1s;
+      letter-spacing: 0.3px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-entrar:hover { background: var(--azul-dk); }
+    .btn-entrar:active { transform: scale(0.99); }
+    .btn-entrar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .msg {
+      display: none;
+      border-radius: 6px;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .msg.erro  { background: rgba(203,9,53,0.07); color: var(--erro); border: 1px solid rgba(203,9,53,0.2); display: block; }
+    .msg.info  { background: rgba(6,66,142,0.07); color: var(--azul); border: 1px solid rgba(6,66,142,0.2); display: block; }
+
+    .rodape {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 10px;
+      color: var(--cinza-400);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    /* ── Dashboard ── */
+    .dashboard { display: none; width: 100%; max-width: 480px; }
+
+    .dash-topo {
+      background: var(--azul);
+      border-radius: 12px 12px 0 0;
+      padding: 28px 32px 24px;
+      position: relative;
+    }
+    .dash-topo::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--vermelho);
+    }
+
+    .dash-bem-vindo { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+    .dash-nome { font-size: 22px; font-weight: 700; color: var(--branco); }
+
+    .dash-perfil-badge {
+      display: inline-block;
+      margin-top: 10px;
+      background: rgba(255,255,255,0.15);
+      color: var(--branco);
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .dash-corpo {
+      background: var(--branco);
+      border: 1px solid var(--cinza-200);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(6,66,142,0.08);
+    }
+
+    .dash-acoes { display: grid; gap: 10px; }
+
+    .btn-acao {
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 8px;
+      padding: 16px 20px;
+      color: var(--cinza-900);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-acao:hover {
+      border-color: var(--azul);
+      background: rgba(6,66,142,0.04);
+    }
+
+    .btn-acao .icone { font-size: 20px; flex-shrink: 0; }
+    .btn-acao .desc { font-size: 11px; font-weight: 400; color: var(--cinza-400); margin-top: 2px; }
+
+    .btn-sair {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--cinza-200);
+      border-radius: 6px;
+      padding: 11px;
+      color: var(--cinza-400);
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: color 0.2s, border-color 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-sair:hover { color: var(--vermelho); border-color: var(--vermelho); }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div class="card" id="telaLogin">
+    <div class="card-topo">
+      <div class="logo-empresa">Direcional Engenharia</div>
+      <div class="logo-titulo">Gestão de Obra</div>
+      <div class="logo-sub">647CC · Célèbre Residence · Contagem</div>
+    </div>
+    <div class="card-corpo">
+      <div class="campo">
+        <label>E-mail</label>
+        <input type="email" id="email" placeholder="seu@direcional.com.br" autocomplete="username"/>
+      </div>
+      <div class="campo">
+        <label>Senha</label>
+        <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') entrar()"/>
+      </div>
+      <button class="btn-entrar" id="btnEntrar" onclick="entrar()">Entrar</button>
+      <div class="msg" id="msgLogin"></div>
+      <div class="rodape">sistema-647cc · v1.0</div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dashboard" id="telaDashboard">
+    <div class="dash-topo">
+      <div class="dash-bem-vindo">Bem-vindo de volta,</div>
+      <div class="dash-nome" id="dashNome">—</div>
+      <div class="dash-perfil-badge" id="dashPerfil">—</div>
+    </div>
+    <div class="dash-corpo">
+      <div class="dash-acoes" id="dashAcoes"></div>
+      <button class="btn-sair" onclick="sair()">Sair da conta</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc }
+                                     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyATyTfAlXhjfaEbbNtGQqKXobpSO99a1mY",
+      authDomain:        "sistema-647cc.firebaseapp.com",
+      projectId:         "sistema-647cc",
+      storageBucket:     "sistema-647cc.firebasestorage.app",
+      messagingSenderId: "556262040392",
+      appId:             "1:556262040392:web:fdfddc34c5e10002aa097d"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    const MENUS = {
+      administrador: [
+        { icone: '👥', titulo: 'Cadastrar usuários',      desc: 'Criar logins e definir perfis de acesso',   pagina: '647cc-cadastros.html' },
+        { icone: '🏗️', titulo: 'Cadastrar frentes',       desc: 'Frentes de serviço e atividades da obra',   pagina: '647cc-cadastros.html' },
+        { icone: '📊', titulo: 'Relatórios',               desc: 'Exportar dados para Google Sheets',         pagina: '#' },
+      ],
+      engenheiro: [
+        { icone: '✅', titulo: 'Aprovar lançamentos',     desc: 'Validar registros do dia',                  pagina: '647cc-aprovacao.html' },
+        { icone: '📈', titulo: 'Dashboard',                desc: 'Avanço real vs. programado',                pagina: '#' },
+      ],
+      operador: [
+        { icone: '🌅', titulo: 'Lançamento — manhã',      desc: 'Registrar frente e equipe do dia',          pagina: '647cc-lancamento-manha.html' },
+        { icone: '🌇', titulo: 'Lançamento — fim do dia', desc: 'Nota de desempenho e produção física',      pagina: '647cc-lancamento-tarde.html' },
+      ],
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const snap  = await getDoc(doc(db, 'usuarios', user.uid));
+        const dados = snap.exists() ? snap.data() : { nome: user.email, perfil: 'operador' };
+        mostrarDashboard(dados);
+      } else {
+        mostrarLogin();
+      }
+    });
+
+    window.entrar = async function () {
+      const email = document.getElementById('email').value.trim();
+      const senha = document.getElementById('senha').value;
+      if (!email || !senha) { mostrarMsg('Preencha e-mail e senha.', 'erro'); return; }
+
+      const btn = document.getElementById('btnEntrar');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Entrando…';
+      document.getElementById('msgLogin').className = 'msg';
+
+      try {
+        await signInWithEmailAndPassword(auth, email, senha);
+      } catch (e) {
+        const erros = {
+          'auth/user-not-found':     'Usuário não encontrado.',
+          'auth/wrong-password':     'Senha incorreta.',
+          'auth/invalid-email':      'E-mail inválido.',
+          'auth/too-many-requests':  'Muitas tentativas. Tente mais tarde.',
+          'auth/invalid-credential': 'E-mail ou senha incorretos.',
+        };
+        mostrarMsg(erros[e.code] || 'Erro ao entrar. Tente novamente.', 'erro');
+        btn.disabled = false;
+        btn.innerHTML = 'Entrar';
+      }
+    };
+
+    window.sair = async function () { await signOut(auth); };
+
+    function mostrarDashboard(dados) {
+      document.getElementById('telaLogin').style.display     = 'none';
+      document.getElementById('telaDashboard').style.display = 'block';
+      document.getElementById('dashNome').textContent        = capitalizar(dados.nome   || '—');
+      document.getElementById('dashPerfil').textContent      = dados.perfil || 'operador';
+
+      const perfil = (dados.perfil || 'operador').toLowerCase();
+      const acoes  = MENUS[perfil] || MENUS.operador;
+      document.getElementById('dashAcoes').innerHTML = acoes.map(a => `
+        <button class="btn-acao" onclick="location.href='${a.pagina}'">
+          <span class="icone">${a.icone}</span>
+          <span><div>${a.titulo}</div><div class="desc">${a.desc}</div></span>
+        </button>`).join('');
+    }
+
+    function mostrarLogin() {
+      document.getElementById('telaDashboard').style.display = 'none';
+      document.getElementById('telaLogin').style.display     = 'block';
+      const btn = document.getElementById('btnEntrar');
+      btn.disabled = false; btn.innerHTML = 'Entrar';
+    }
+
+    function capitalizar(str) {
+      if (!str) return '';
+      return str.split(' ').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+    }
+
+    function mostrarMsg(texto, tipo) {
+      const el = document.getElementById('msgLogin');
+      el.textContent = texto;
+      el.className   = `msg ${tipo}`;
+    }
+  </script>
+</body>
+</html>

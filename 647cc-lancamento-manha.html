@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>647CC · Lançamento — Manhã</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --azul:      #06428E;
+      --azul-dk:   #04316A;
+      --azul-bg:   #EBF2FC;
+      --vermelho:  #CB0935;
+      --verde:     #196B24;
+      --verde-bg:  #EBF5EC;
+      --cinza-900: #171717;
+      --cinza-700: #3A3A3A;
+      --cinza-400: #8A8A8A;
+      --cinza-200: #E8E8E8;
+      --cinza-100: #F5F7FA;
+      --branco:    #FFFFFF;
+      --laranja:   #E97132;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cinza-100);
+      color: var(--cinza-900);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--azul);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 3px solid var(--vermelho);
+    }
+
+    .topbar-esq { display: flex; align-items: center; gap: 16px; }
+    .topbar-logo { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
+    .topbar-sep  { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+    .topbar-titulo { font-size: 15px; font-weight: 600; color: var(--branco); }
+
+    .btn-voltar {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      padding: 7px 14px;
+      color: var(--branco);
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-voltar:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── Container ── */
+    .container { max-width: 680px; margin: 0 auto; padding: 32px 16px; }
+
+    /* ── Info bar data/hora ── */
+    .info-bar {
+      background: var(--azul-bg);
+      border: 1px solid rgba(6,66,142,0.15);
+      border-radius: 8px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .info-bar-item { display: flex; flex-direction: column; }
+    .info-bar-label { font-size: 10px; font-weight: 600; color: var(--azul); text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-bar-valor { font-size: 14px; font-weight: 700; color: var(--cinza-900); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+
+    .info-bar-sep { width: 1px; height: 36px; background: rgba(6,66,142,0.15); }
+
+    /* ── Card ── */
+    .card {
+      background: var(--branco);
+      border: 1px solid var(--cinza-200);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      padding: 18px 24px 14px;
+      border-bottom: 1px solid var(--cinza-200);
+      background: var(--cinza-100);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-header-num {
+      width: 26px; height: 26px;
+      background: var(--azul);
+      color: var(--branco);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card-header-titulo { font-size: 14px; font-weight: 700; }
+    .card-header-desc   { font-size: 12px; color: var(--cinza-400); margin-top: 1px; }
+
+    .card-body { padding: 24px; }
+
+    /* ── Campos ── */
+    .campo { margin-bottom: 18px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--cinza-700);
+      margin-bottom: 6px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    select, input {
+      width: 100%;
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 6px;
+      padding: 11px 13px;
+      color: var(--cinza-900);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--azul);
+      box-shadow: 0 0 0 3px rgba(6,66,142,0.1);
+      background: var(--branco);
+    }
+
+    select option { background: var(--branco); }
+
+    /* ── Busca colaboradores ── */
+    .busca-wrap { position: relative; margin-bottom: 12px; }
+    .busca-wrap input { padding-left: 36px; }
+    .busca-icon {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--cinza-400); font-size: 14px; pointer-events: none;
+    }
+
+    /* ── Lista de colaboradores ── */
+    .lista-colaboradores {
+      border: 1px solid var(--cinza-200);
+      border-radius: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .lista-colaboradores::-webkit-scrollbar { width: 4px; }
+    .lista-colaboradores::-webkit-scrollbar-track { background: transparent; }
+    .lista-colaboradores::-webkit-scrollbar-thumb { background: var(--cinza-200); border-radius: 2px; }
+
+    .colab-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--cinza-200);
+      cursor: pointer;
+      transition: background 0.12s;
+      gap: 12px;
+      user-select: none;
+    }
+
+    .colab-item:last-child { border-bottom: none; }
+    .colab-item:hover { background: var(--azul-bg); }
+    .colab-item.selecionado { background: var(--azul-bg); }
+
+    .colab-check {
+      width: 18px; height: 18px;
+      border: 2px solid var(--cinza-200);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.12s;
+      font-size: 11px;
+      color: var(--branco);
+    }
+
+    .colab-item.selecionado .colab-check {
+      background: var(--azul);
+      border-color: var(--azul);
+    }
+
+    .colab-info { flex: 1; min-width: 0; }
+    .colab-nome { font-size: 13px; font-weight: 600; }
+    .colab-detalhe { font-size: 11px; color: var(--cinza-400); margin-top: 1px; font-family: 'JetBrains Mono', monospace; }
+
+    .colab-funcao-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--azul);
+      background: var(--azul-bg);
+      border: 1px solid rgba(6,66,142,0.15);
+      border-radius: 4px;
+      padding: 2px 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .lista-vazia-msg {
+      text-align: center;
+      padding: 28px;
+      color: var(--cinza-400);
+      font-size: 13px;
+    }
+
+    /* ── Selecionados / Turno ── */
+    .selecionados-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .selecionados-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--cinza-700);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .badge-sel {
+      background: var(--azul);
+      color: var(--branco);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sel-vazio {
+      border: 1px dashed var(--cinza-200);
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      color: var(--cinza-400);
+      font-size: 12px;
+    }
+
+    .sel-item {
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sel-item-info { flex: 1; min-width: 140px; }
+    .sel-item-nome { font-size: 13px; font-weight: 600; }
+    .sel-item-mat  { font-size: 11px; color: var(--cinza-400); font-family: 'JetBrains Mono', monospace; }
+
+    .turno-wrap { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .btn-turno {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--cinza-200);
+      background: var(--branco);
+      color: var(--cinza-700);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .btn-turno:hover { border-color: var(--azul); color: var(--azul); }
+
+    .btn-turno.ativo-integral {
+      background: var(--azul);
+      border-color: var(--azul);
+      color: var(--branco);
+    }
+
+    .btn-turno.ativo-meio {
+      background: var(--laranja);
+      border-color: var(--laranja);
+      color: var(--branco);
+    }
+
+    .btn-remover {
+      background: none;
+      border: none;
+      color: var(--cinza-400);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      transition: color 0.15s;
+      line-height: 1;
+    }
+    .btn-remover:hover { color: var(--vermelho); }
+
+    /* ── Botão confirmar ── */
+    .btn-confirmar {
+      width: 100%;
+      background: var(--azul);
+      color: var(--branco);
+      border: none;
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.2px;
+    }
+
+    .btn-confirmar:hover { background: var(--azul-dk); }
+    .btn-confirmar:active { transform: scale(0.99); }
+    .btn-confirmar:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ── Mensagens ── */
+    .msg {
+      display: none;
+      border-radius: 6px;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 14px;
+    }
+    .msg.erro    { background: rgba(203,9,53,0.07);  color: var(--vermelho); border: 1px solid rgba(203,9,53,0.2);  display: block; }
+    .msg.sucesso { background: rgba(25,107,36,0.07); color: var(--verde);    border: 1px solid rgba(25,107,36,0.2); display: block; }
+    .msg.aviso   { background: rgba(233,113,50,0.08); color: var(--laranja); border: 1px solid rgba(233,113,50,0.2); display: block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+
+    /* ── Sucesso state ── */
+    .sucesso-state {
+      display: none;
+      text-align: center;
+      padding: 48px 32px;
+    }
+
+    .sucesso-icon {
+      width: 64px; height: 64px;
+      background: var(--verde-bg);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 20px;
+    }
+
+    .sucesso-titulo { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .sucesso-desc   { font-size: 13px; color: var(--cinza-400); line-height: 1.6; }
+
+    .sucesso-detalhe {
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .sucesso-detalhe-linha {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--cinza-200);
+    }
+    .sucesso-detalhe-linha:last-child { border-bottom: none; }
+    .sucesso-detalhe-linha span:first-child { color: var(--cinza-400); }
+    .sucesso-detalhe-linha span:last-child  { font-weight: 600; }
+
+    .btn-novo-lancamento {
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 6px;
+      padding: 11px 24px;
+      color: var(--cinza-700);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.15s;
+    }
+    .btn-novo-lancamento:hover { border-color: var(--azul); color: var(--azul); }
+
+    /* ── Histórico do dia ── */
+    .historico-card {
+      background: var(--branco);
+      border: 1px solid var(--cinza-200);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+
+    .historico-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--cinza-200);
+      background: var(--cinza-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .historico-titulo { font-size: 12px; font-weight: 700; color: var(--cinza-700); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .status-badge {
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 3px 9px;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pendente  { background: rgba(233,113,50,0.1); color: var(--laranja); border: 1px solid rgba(233,113,50,0.2); }
+    .status-aprovado  { background: rgba(25,107,36,0.08); color: var(--verde);   border: 1px solid rgba(25,107,36,0.2); }
+    .status-reprovado { background: rgba(203,9,53,0.07);  color: var(--vermelho);border: 1px solid rgba(203,9,53,0.2); }
+
+    .historico-body { padding: 16px 24px; }
+
+    .hist-linha {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--cinza-200);
+      font-size: 13px;
+      gap: 8px;
+    }
+    .hist-linha:last-child { border-bottom: none; }
+    .hist-nome { font-weight: 600; flex: 1; }
+    .hist-mat  { color: var(--cinza-400); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .hist-turno { font-size: 11px; font-weight: 700; color: var(--azul); font-family: 'JetBrains Mono', monospace; }
+
+    @media (max-width: 480px) {
+      .topbar { padding: 0 16px; }
+      .container { padding: 20px 12px; }
+      .info-bar { flex-wrap: wrap; gap: 12px; }
+      .info-bar-sep { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-esq">
+      <span class="topbar-logo">Direcional</span>
+      <span class="topbar-sep"></span>
+      <span class="topbar-titulo">Lançamento — Manhã</span>
+    </div>
+    <button class="btn-voltar" onclick="location.href='647cc-login.html'">← Voltar</button>
+  </div>
+
+  <div class="container">
+
+    <!-- Info bar -->
+    <div class="info-bar">
+      <div class="info-bar-item">
+        <span class="info-bar-label">Data</span>
+        <span class="info-bar-valor" id="barData">—</span>
+      </div>
+      <div class="info-bar-sep"></div>
+      <div class="info-bar-item">
+        <span class="info-bar-label">Hora</span>
+        <span class="info-bar-valor" id="barHora">—</span>
+      </div>
+      <div class="info-bar-sep"></div>
+      <div class="info-bar-item">
+        <span class="info-bar-label">Operador</span>
+        <span class="info-bar-valor" id="barOperador">—</span>
+      </div>
+    </div>
+
+    <!-- Formulário principal -->
+    <div id="formArea">
+
+      <!-- Passo 1: Frente -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-num">1</div>
+          <div>
+            <div class="card-header-titulo">Frente de serviço</div>
+            <div class="card-header-desc">Selecione a frente onde a equipe vai trabalhar hoje</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="campo">
+            <label>Frente de serviço</label>
+            <select id="select-frente">
+              <option value="">— Carregando frentes… —</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Turno padrão da equipe</label>
+            <select id="select-turno-padrao" onchange="aplicarTurnoPadrao()">
+              <option value="">— Selecione para aplicar a todos —</option>
+              <option value="8.8">Integral — 8,8 horas</option>
+              <option value="4.4">Meio período — 4,4 horas</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passo 2: Colaboradores -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-num">2</div>
+          <div>
+            <div class="card-header-titulo">Colaboradores MOD</div>
+            <div class="card-header-desc">Selecione todos que estão presentes hoje nesta frente</div>
+          </div>
+        </div>
+        <div class="card-body">
+
+          <div class="busca-wrap">
+            <span class="busca-icon">🔍</span>
+            <input type="text" id="busca-colab" placeholder="Buscar por nome, matrícula ou função…"
+                   oninput="filtrarColaboradores(this.value)"/>
+          </div>
+
+          <div class="lista-colaboradores" id="lista-colaboradores">
+            <div class="lista-vazia-msg">Carregando colaboradores…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passo 3: Revisão e turnos -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-num">3</div>
+          <div>
+            <div class="card-header-titulo">Revisão e turnos</div>
+            <div class="card-header-desc">Confirme o turno de cada colaborador selecionado</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="selecionados-header">
+            <span class="selecionados-label">Colaboradores selecionados</span>
+            <span class="badge-sel" id="badge-count">0</span>
+          </div>
+          <div id="area-selecionados">
+            <div class="sel-vazio">Selecione colaboradores no passo 2 para definir os turnos.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmar -->
+      <button class="btn-confirmar" id="btn-confirmar" onclick="confirmarLancamento()">
+        Confirmar lançamento
+      </button>
+      <div class="msg" id="msg-lancamento"></div>
+
+    </div><!-- /formArea -->
+
+    <!-- Estado de sucesso -->
+    <div class="sucesso-state" id="sucessoArea">
+      <div class="sucesso-icon">✅</div>
+      <div class="sucesso-titulo">Lançamento registrado!</div>
+      <div class="sucesso-desc">O registro foi salvo e está aguardando aprovação do engenheiro.</div>
+      <div class="sucesso-detalhe" id="sucesso-detalhe"></div>
+      <button class="btn-novo-lancamento" onclick="novoLancamento()">Fazer outro lançamento</button>
+    </div>
+
+    <!-- Histórico do dia -->
+    <div id="historicoArea" style="margin-top: 24px;"></div>
+
+  </div><!-- /container -->
+
+  <script type="module">
+    import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged }
+                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, getDoc, doc, query,
+             where, orderBy, serverTimestamp, Timestamp }
+                               from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyATyTfAlXhjfaEbbNtGQqKXobpSO99a1mY",
+      authDomain:        "sistema-647cc.firebaseapp.com",
+      projectId:         "sistema-647cc",
+      storageBucket:     "sistema-647cc.firebasestorage.app",
+      messagingSenderId: "556262040392",
+      appId:             "1:556262040392:web:fdfddc34c5e10002aa097d"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    // ── Estado global ──
+    let colaboradoresTodos = [];
+    let selecionados       = {};   // { id: { ...dadosColab, turno: '8.8' | '4.4' } }
+    let usuarioAtual       = null;
+    let frentesMap         = {};
+
+    // ── Clock ──
+    function atualizarRelogio() {
+      const agora = new Date();
+      document.getElementById('barData').textContent =
+        agora.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+      document.getElementById('barHora').textContent =
+        agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    }
+    atualizarRelogio();
+    setInterval(atualizarRelogio, 30000);
+
+    // ── Auth ──
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = '647cc-login.html'; return; }
+
+      const snap  = await getDoc(doc(db, 'usuarios', user.uid));
+      usuarioAtual = snap.exists() ? { uid: user.uid, ...snap.data() } : { uid: user.uid, nome: user.email, perfil: 'operador' };
+
+      document.getElementById('barOperador').textContent = capitalizar(usuarioAtual.nome);
+
+      await carregarFrentes();
+      await carregarColaboradores();
+      await carregarHistoricoDia();
+    });
+
+    // ── Frentes ──
+    async function carregarFrentes() {
+      const snap = await getDocs(query(collection(db, 'frentes'), where('ativa', '==', true)));
+      const sel  = document.getElementById('select-frente');
+      sel.innerHTML = '<option value="">— Selecione a frente —</option>';
+
+      const docsOrdenados = snap.docs.sort((a,b) => a.data().nome.localeCompare(b.data().nome, 'pt-BR'));
+      docsOrdenados.forEach(d => {
+        frentesMap[d.id] = d.data();
+        const opt = document.createElement('option');
+        opt.value       = d.id;
+        opt.textContent = d.data().nome + (d.data().codigo ? ` (${d.data().codigo})` : '');
+        sel.appendChild(opt);
+      });
+
+      if (snap.empty) sel.innerHTML = '<option value="">Nenhuma frente cadastrada</option>';
+    }
+
+    // ── Colaboradores ──
+    async function carregarColaboradores() {
+      const snap = await getDocs(query(collection(db, 'colaboradores'), where('ativo', '==', true)));
+      colaboradoresTodos = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      renderizarLista(colaboradoresTodos);
+    }
+
+    function renderizarLista(lista) {
+      const cont = document.getElementById('lista-colaboradores');
+      if (lista.length === 0) {
+        cont.innerHTML = '<div class="lista-vazia-msg">Nenhum colaborador encontrado.</div>';
+        return;
+      }
+
+      cont.innerHTML = lista.map(c => `
+        <div class="colab-item ${selecionados[c.id] ? 'selecionado' : ''}"
+             onclick="toggleColab('${c.id}')" id="colab-item-${c.id}">
+          <div class="colab-check">${selecionados[c.id] ? '✓' : ''}</div>
+          <div class="colab-info">
+            <div class="colab-nome">${c.nome}</div>
+            <div class="colab-detalhe">Mat: ${c.matricula} · ${c.encarregado}</div>
+          </div>
+          <span class="colab-funcao-badge">${c.funcao}</span>
+        </div>`).join('');
+    }
+
+    window.filtrarColaboradores = function(termo) {
+      if (!termo.trim()) { renderizarLista(colaboradoresTodos); return; }
+      const t = termo.toLowerCase();
+      renderizarLista(colaboradoresTodos.filter(c =>
+        c.nome.toLowerCase().includes(t) ||
+        c.matricula.includes(t) ||
+        c.funcao.toLowerCase().includes(t)
+      ));
+    };
+
+    window.toggleColab = function(id) {
+      const colab = colaboradoresTodos.find(c => c.id === id);
+      if (!colab) return;
+
+      if (selecionados[id]) {
+        delete selecionados[id];
+      } else {
+        // Pega turno padrão se definido
+        const padrao = document.getElementById('select-turno-padrao').value || '8.8';
+        selecionados[id] = { ...colab, turno: padrao };
+      }
+
+      // Atualiza item visual
+      const item  = document.getElementById(`colab-item-${id}`);
+      if (item) {
+        item.classList.toggle('selecionado', !!selecionados[id]);
+        item.querySelector('.colab-check').textContent = selecionados[id] ? '✓' : '';
+      }
+
+      renderizarSelecionados();
+    };
+
+    window.aplicarTurnoPadrao = function() {
+      const padrao = document.getElementById('select-turno-padrao').value;
+      if (!padrao) return;
+      Object.keys(selecionados).forEach(id => { selecionados[id].turno = padrao; });
+      renderizarSelecionados();
+    };
+
+    function renderizarSelecionados() {
+      const lista = Object.values(selecionados);
+      document.getElementById('badge-count').textContent = lista.length;
+      const area = document.getElementById('area-selecionados');
+
+      if (lista.length === 0) {
+        area.innerHTML = '<div class="sel-vazio">Selecione colaboradores no passo 2 para definir os turnos.</div>';
+        return;
+      }
+
+      area.innerHTML = lista.map(c => `
+        <div class="sel-item" id="sel-${c.id}">
+          <div class="sel-item-info">
+            <div class="sel-item-nome">${c.nome}</div>
+            <div class="sel-item-mat">Mat: ${c.matricula} · ${c.funcao}</div>
+          </div>
+          <div class="turno-wrap">
+            <button class="btn-turno ${c.turno === '8.8' ? 'ativo-integral' : ''}"
+                    onclick="setTurno('${c.id}', '8.8')">8,8h</button>
+            <button class="btn-turno ${c.turno === '4.4' ? 'ativo-meio' : ''}"
+                    onclick="setTurno('${c.id}', '4.4')">4,4h</button>
+          </div>
+          <button class="btn-remover" onclick="removerColab('${c.id}')" title="Remover">×</button>
+        </div>`).join('');
+    }
+
+    window.setTurno = function(id, turno) {
+      if (selecionados[id]) {
+        selecionados[id].turno = turno;
+        renderizarSelecionados();
+      }
+    };
+
+    window.removerColab = function(id) {
+      delete selecionados[id];
+      const item = document.getElementById(`colab-item-${id}`);
+      if (item) { item.classList.remove('selecionado'); item.querySelector('.colab-check').textContent = ''; }
+      renderizarSelecionados();
+    };
+
+    // ── Confirmar lançamento ──
+    window.confirmarLancamento = async function() {
+      const frenteId = document.getElementById('select-frente').value;
+      const lista    = Object.values(selecionados);
+
+      if (!frenteId) { showMsg('Selecione a frente de serviço.', 'erro'); return; }
+      if (lista.length === 0) { showMsg('Selecione ao menos um colaborador.', 'erro'); return; }
+
+      // Verifica turno definido
+      const semTurno = lista.filter(c => !c.turno);
+      if (semTurno.length > 0) { showMsg(`Defina o turno de: ${semTurno.map(c=>c.nome).join(', ')}`, 'erro'); return; }
+
+      const btn = document.getElementById('btn-confirmar');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Registrando…';
+
+      try {
+        const frente  = frentesMap[frenteId];
+        const agora   = new Date();
+        const dataStr = agora.toISOString().split('T')[0];
+
+        // Verifica duplicidade: mesmo operador + mesma frente + mesmo dia
+        const qDup = query(
+          collection(db, 'lancamentos_manha'),
+          where('operadorUid', '==', usuarioAtual.uid),
+          where('frenteId',    '==', frenteId),
+          where('dataStr',     '==', dataStr)
+        );
+        const dupSnap = await getDocs(qDup);
+        if (!dupSnap.empty) {
+          showMsg('Já existe um lançamento seu para esta frente hoje. Use o histórico abaixo para consultar.', 'aviso');
+          btn.disabled = false; btn.innerHTML = 'Confirmar lançamento';
+          return;
+        }
+
+        // Calcula custos
+        const colaboradoresData = lista.map(c => ({
+          id:         c.id,
+          matricula:  c.matricula,
+          nome:       c.nome,
+          funcao:     c.funcao,
+          encarregado: c.encarregado,
+          turno:      parseFloat(c.turno),
+          custoHora:  c.custoHora || 0,
+          custoLancado: (c.custoHora || 0) * parseFloat(c.turno)
+        }));
+
+        const custoTotalLancado = colaboradoresData.reduce((s, c) => s + c.custoLancado, 0);
+        const totalHoras        = colaboradoresData.reduce((s, c) => s + c.turno, 0);
+
+        await addDoc(collection(db, 'lancamentos_manha'), {
+          operadorUid:    usuarioAtual.uid,
+          operadorNome:   usuarioAtual.nome,
+          operadorMat:    usuarioAtual.matricula || '',
+          frenteId,
+          frenteNome:     frente.nome,
+          frenteCodigo:   frente.codigo || '',
+          colaboradores:  colaboradoresData,
+          totalColaboradores: colaboradoresData.length,
+          totalHoras,
+          custoTotalLancado,
+          dataStr,
+          status:         'pendente',
+          criadoEm:       serverTimestamp()
+        });
+
+        // Mostra sucesso
+        document.getElementById('formArea').style.display = 'none';
+        const sArea = document.getElementById('sucessoArea');
+        sArea.style.display = 'block';
+        document.getElementById('sucesso-detalhe').innerHTML = `
+          <div class="sucesso-detalhe-linha">
+            <span>Frente</span><span>${frente.nome}</span>
+          </div>
+          <div class="sucesso-detalhe-linha">
+            <span>Colaboradores</span><span>${colaboradoresData.length}</span>
+          </div>
+          <div class="sucesso-detalhe-linha">
+            <span>Total de horas</span><span>${totalHoras.toFixed(1)}h</span>
+          </div>
+          <div class="sucesso-detalhe-linha">
+            <span>Custo lançado</span><span>R$ ${custoTotalLancado.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+          </div>
+          <div class="sucesso-detalhe-linha">
+            <span>Status</span><span>⏳ Aguardando aprovação</span>
+          </div>`;
+
+        selecionados = {};
+        await carregarHistoricoDia();
+
+      } catch(e) {
+        showMsg('Erro ao registrar: ' + e.message, 'erro');
+        btn.disabled = false; btn.innerHTML = 'Confirmar lançamento';
+      }
+    };
+
+    window.novoLancamento = function() {
+      document.getElementById('sucessoArea').style.display = 'none';
+      document.getElementById('formArea').style.display   = 'block';
+      document.getElementById('select-frente').value      = '';
+      document.getElementById('select-turno-padrao').value = '';
+      document.getElementById('busca-colab').value        = '';
+      selecionados = {};
+      renderizarLista(colaboradoresTodos);
+      renderizarSelecionados();
+      const btn = document.getElementById('btn-confirmar');
+      btn.disabled = false; btn.innerHTML = 'Confirmar lançamento';
+    };
+
+    // ── Histórico do dia ──
+    async function carregarHistoricoDia() {
+      const dataStr = new Date().toISOString().split('T')[0];
+      const q = query(
+        collection(db, 'lancamentos_manha'),
+        where('operadorUid', '==', usuarioAtual?.uid),
+        where('dataStr',     '==', dataStr)
+      );
+
+      const snap = await getDocs(q);
+      snap.docs.sort((a,b) => (b.data().criadoEm?.seconds||0) - (a.data().criadoEm?.seconds||0));
+      const area = document.getElementById('historicoArea');
+
+      if (snap.empty) { area.innerHTML = ''; return; }
+
+      const statusLabel = { pendente: 'Pendente', aprovado: 'Aprovado', reprovado: 'Reprovado' };
+      const statusClass = { pendente: 'status-pendente', aprovado: 'status-aprovado', reprovado: 'status-reprovado' };
+
+      area.innerHTML = snap.docs.map(d => {
+        const l = d.data();
+        const linhas = l.colaboradores.map(c => `
+          <div class="hist-linha">
+            <span class="hist-nome">${c.nome}</span>
+            <span class="hist-mat">${c.matricula}</span>
+            <span class="hist-turno">${c.turno}h</span>
+          </div>`).join('');
+
+        return `
+          <div class="historico-card" style="margin-bottom:16px">
+            <div class="historico-header">
+              <div>
+                <span class="historico-titulo">${l.frenteNome}</span>
+                <div style="font-size:11px;color:var(--cinza-400);margin-top:2px;font-family:'JetBrains Mono',monospace">
+                  ${l.totalColaboradores} colaboradores · ${l.totalHoras?.toFixed(1)}h ·
+                  R$ ${l.custoTotalLancado?.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+                </div>
+              </div>
+              <span class="status-badge ${statusClass[l.status]}">${statusLabel[l.status]}</span>
+            </div>
+            <div class="historico-body">${linhas}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Helpers ──
+    function showMsg(texto, tipo) {
+      const el = document.getElementById('msg-lancamento');
+      el.textContent = texto; el.className = `msg ${tipo}`;
+      setTimeout(() => { el.className = 'msg'; }, 6000);
+    }
+
+    function capitalizar(str) {
+      if (!str) return '';
+      return str.split(' ').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>647CC · Aprovação</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --azul:      #06428E;
+      --azul-dk:   #04316A;
+      --azul-bg:   #EBF2FC;
+      --vermelho:  #CB0935;
+      --verm-bg:   #FDEEF1;
+      --verde:     #196B24;
+      --verde-bg:  #EBF5EC;
+      --laranja:   #E97132;
+      --laran-bg:  #FDF3EC;
+      --cinza-900: #171717;
+      --cinza-700: #3A3A3A;
+      --cinza-400: #8A8A8A;
+      --cinza-200: #E8E8E8;
+      --cinza-100: #F5F7FA;
+      --branco:    #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cinza-100);
+      color: var(--cinza-900);
+      min-height: 100vh;
+      padding-bottom: 48px;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--azul); padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px; position: sticky; top: 0; z-index: 100;
+      border-bottom: 3px solid var(--vermelho);
+    }
+    .topbar-esq { display: flex; align-items: center; gap: 16px; }
+    .topbar-logo   { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
+    .topbar-sep    { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+    .topbar-titulo { font-size: 15px; font-weight: 600; color: var(--branco); }
+    .btn-voltar {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px; padding: 7px 14px; color: var(--branco);
+      font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer;
+    }
+    .btn-voltar:hover { background: rgba(255,255,255,0.2); }
+
+    .container { max-width: 800px; margin: 0 auto; padding: 32px 16px; }
+
+    /* ── Filtros ── */
+    .filtros-card {
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 10px; padding: 20px 24px; margin-bottom: 24px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+
+    .filtros-titulo {
+      font-size: 11px; font-weight: 700; color: var(--cinza-700);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+    }
+
+    .filtros-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+    @media (max-width: 600px) { .filtros-grid { grid-template-columns: 1fr 1fr; } }
+
+    .filtro-campo label {
+      display: block; font-size: 11px; font-weight: 600; color: var(--cinza-700);
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px;
+    }
+
+    .filtro-campo select,
+    .filtro-campo input {
+      width: 100%; background: var(--cinza-100); border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 9px 12px; color: var(--cinza-900);
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color 0.15s; -webkit-appearance: none;
+    }
+    .filtro-campo select:focus,
+    .filtro-campo input:focus { border-color: var(--azul); background: var(--branco); }
+
+    .btn-filtrar {
+      background: var(--azul); color: var(--branco); border: none;
+      border-radius: 6px; padding: 9px 20px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-filtrar:hover { background: var(--azul-dk); }
+
+    /* ── Contador resumo ── */
+    .resumo-bar {
+      display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+
+    .resumo-chip {
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 8px; padding: 10px 16px;
+      display: flex; flex-direction: column; gap: 2px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+
+    .resumo-chip-label { font-size: 10px; font-weight: 600; color: var(--cinza-400); text-transform: uppercase; letter-spacing: 0.5px; }
+    .resumo-chip-valor { font-size: 18px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .resumo-chip-valor.pendente { color: var(--laranja); }
+    .resumo-chip-valor.aprovado { color: var(--verde); }
+    .resumo-chip-valor.reprovado{ color: var(--vermelho); }
+
+    /* ── Cards de lançamento ── */
+    .lancamento-card {
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 10px; overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06); margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .lancamento-card:hover { border-color: rgba(6,66,142,0.3); }
+    .lancamento-card.reprovado-card { border-color: rgba(203,9,53,0.3); }
+    .lancamento-card.aprovado-card  { border-color: rgba(25,107,36,0.3); }
+
+    .card-header {
+      padding: 16px 24px; border-bottom: 1px solid var(--cinza-200);
+      background: var(--cinza-100);
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    }
+
+    .card-header-info { flex: 1; min-width: 0; }
+    .card-frente      { font-size: 15px; font-weight: 700; }
+    .card-meta        { font-size: 11px; color: var(--cinza-400); margin-top: 4px; font-family: 'JetBrains Mono', monospace; line-height: 1.6; }
+
+    .status-badge {
+      font-size: 10px; font-weight: 700; border-radius: 4px;
+      padding: 3px 9px; font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; flex-shrink: 0;
+    }
+    .s-pendente  { background: var(--laran-bg); color: var(--laranja); border: 1px solid rgba(233,113,50,0.25); }
+    .s-aprovado  { background: var(--verde-bg); color: var(--verde);   border: 1px solid rgba(25,107,36,0.25); }
+    .s-reprovado { background: var(--verm-bg);  color: var(--vermelho);border: 1px solid rgba(203,9,53,0.25); }
+
+    /* ── Tabela colaboradores ── */
+    .colab-table { width: 100%; border-collapse: collapse; }
+
+    .colab-table th {
+      font-size: 10px; font-weight: 700; color: var(--cinza-400);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 10px 16px; text-align: left;
+      border-bottom: 1px solid var(--cinza-200);
+      background: var(--cinza-100);
+    }
+
+    .colab-table td {
+      padding: 12px 16px; font-size: 13px;
+      border-bottom: 1px solid var(--cinza-200);
+    }
+
+    .colab-table tr:last-child td { border-bottom: none; }
+    .colab-table tr:hover td { background: rgba(6,66,142,0.02); }
+
+    .td-nome  { font-weight: 600; }
+    .td-mat   { color: var(--cinza-400); font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .td-turno { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--azul); }
+
+    .nota-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 700; border-radius: 4px;
+      padding: 3px 8px; font-family: 'JetBrains Mono', monospace;
+    }
+    .nota-baixa  { background: var(--verm-bg);  color: var(--vermelho); }
+    .nota-media  { background: var(--laran-bg); color: var(--laranja); }
+    .nota-boa    { background: var(--azul-bg);  color: var(--azul); }
+    .nota-otima  { background: var(--verde-bg); color: var(--verde); }
+
+    .td-producao { color: var(--verde); font-weight: 600; font-size: 12px; }
+    .td-obs      { color: var(--cinza-400); font-style: italic; font-size: 11px; max-width: 160px; }
+
+    /* ── Ações ── */
+    .card-acoes {
+      padding: 16px 24px; display: flex; align-items: center;
+      justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+
+    .acoes-esq { display: flex; align-items: center; gap: 8px; }
+
+    .btn-reprovar {
+      background: var(--verm-bg); color: var(--vermelho);
+      border: 1px solid rgba(203,9,53,0.25); border-radius: 6px;
+      padding: 8px 18px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+    }
+    .btn-reprovar:hover { background: var(--vermelho); color: var(--branco); }
+
+    .btn-aprovar {
+      background: var(--verde-bg); color: var(--verde);
+      border: 1px solid rgba(25,107,36,0.25); border-radius: 6px;
+      padding: 8px 18px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+    }
+    .btn-aprovar:hover { background: var(--verde); color: var(--branco); }
+
+    .btn-desfazer {
+      background: transparent; color: var(--cinza-400);
+      border: 1px solid var(--cinza-200); border-radius: 6px;
+      padding: 8px 14px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+    }
+    .btn-desfazer:hover { border-color: var(--azul); color: var(--azul); }
+
+    .acoes-status {
+      font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* ── Modal reprovação ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 1000;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.aberto { display: flex; }
+
+    .modal {
+      background: var(--branco); border-radius: 12px;
+      padding: 32px; max-width: 480px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-titulo { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .modal-desc   { font-size: 13px; color: var(--cinza-400); margin-bottom: 20px; line-height: 1.5; }
+
+    .modal-frente {
+      background: var(--verm-bg); border: 1px solid rgba(203,9,53,0.2);
+      border-radius: 6px; padding: 10px 14px;
+      font-size: 13px; font-weight: 600; color: var(--vermelho);
+      margin-bottom: 20px;
+    }
+
+    .modal-label {
+      font-size: 11px; font-weight: 600; color: var(--cinza-700);
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px;
+    }
+
+    .modal-textarea {
+      width: 100%; background: var(--cinza-100); border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 12px; font-size: 13px; font-family: 'Inter', sans-serif;
+      color: var(--cinza-900); resize: none; outline: none; min-height: 100px;
+      transition: border-color 0.15s;
+    }
+    .modal-textarea:focus { border-color: var(--vermelho); box-shadow: 0 0 0 3px rgba(203,9,53,0.1); }
+    .modal-textarea::placeholder { color: var(--cinza-400); }
+
+    .modal-contador { font-size: 11px; color: var(--cinza-400); text-align: right; margin-top: 4px; margin-bottom: 20px; }
+
+    .modal-acoes { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .btn-cancelar-modal {
+      background: transparent; border: 1px solid var(--cinza-200); border-radius: 6px;
+      padding: 10px 20px; font-size: 13px; font-weight: 600; color: var(--cinza-700);
+      cursor: pointer; font-family: 'Inter', sans-serif;
+    }
+    .btn-cancelar-modal:hover { border-color: var(--cinza-400); }
+
+    .btn-confirmar-reprova {
+      background: var(--vermelho); color: var(--branco); border: none;
+      border-radius: 6px; padding: 10px 20px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.15s;
+    }
+    .btn-confirmar-reprova:hover { background: #a8072b; }
+    .btn-confirmar-reprova:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Comentário de reprovação exibido ── */
+    .reprova-comment {
+      background: var(--verm-bg); border: 1px solid rgba(203,9,53,0.2);
+      border-radius: 6px; padding: 12px 16px; margin: 0 24px 16px;
+      font-size: 12px; line-height: 1.6;
+    }
+    .reprova-comment-label { font-weight: 700; color: var(--vermelho); margin-bottom: 4px; font-size: 11px; text-transform: uppercase; }
+    .reprova-comment-texto { color: var(--cinza-700); }
+
+    /* ── Vazio ── */
+    .state-vazio {
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 10px; padding: 48px 32px; text-align: center;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .state-vazio-icon   { font-size: 40px; margin-bottom: 16px; }
+    .state-vazio-titulo { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .state-vazio-desc   { font-size: 13px; color: var(--cinza-400); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+
+    @media (max-width: 480px) {
+      .topbar { padding: 0 16px; }
+      .container { padding: 20px 12px; }
+      .colab-table th:nth-child(3),
+      .colab-table td:nth-child(3),
+      .colab-table th:nth-child(5),
+      .colab-table td:nth-child(5) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-esq">
+      <span class="topbar-logo">Direcional</span>
+      <span class="topbar-sep"></span>
+      <span class="topbar-titulo">Aprovação de Lançamentos</span>
+    </div>
+    <button class="btn-voltar" onclick="location.href='647cc-login.html'">← Voltar</button>
+  </div>
+
+  <div class="container">
+
+    <!-- Filtros -->
+    <div class="filtros-card">
+      <div class="filtros-titulo">Filtros</div>
+      <div class="filtros-grid">
+        <div class="filtro-campo">
+          <label>Data</label>
+          <input type="date" id="filtro-data"/>
+        </div>
+        <div class="filtro-campo">
+          <label>Frente</label>
+          <select id="filtro-frente">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="filtro-campo">
+          <label>Operador</label>
+          <select id="filtro-operador">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <button class="btn-filtrar" onclick="aplicarFiltros()">Filtrar</button>
+      </div>
+    </div>
+
+    <!-- Resumo -->
+    <div class="resumo-bar">
+      <div class="resumo-chip">
+        <span class="resumo-chip-label">Total</span>
+        <span class="resumo-chip-valor" id="cnt-total">—</span>
+      </div>
+      <div class="resumo-chip">
+        <span class="resumo-chip-label">Pendentes</span>
+        <span class="resumo-chip-valor pendente" id="cnt-pendente">—</span>
+      </div>
+      <div class="resumo-chip">
+        <span class="resumo-chip-label">Aprovados</span>
+        <span class="resumo-chip-valor aprovado" id="cnt-aprovado">—</span>
+      </div>
+      <div class="resumo-chip">
+        <span class="resumo-chip-label">Reprovados</span>
+        <span class="resumo-chip-valor reprovado" id="cnt-reprovado">—</span>
+      </div>
+    </div>
+
+    <!-- Lista -->
+    <div id="listaArea">
+      <div class="state-vazio">
+        <div class="state-vazio-icon">⏳</div>
+        <div class="state-vazio-titulo">Carregando…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal reprovação -->
+  <div class="modal-overlay" id="modalReprova">
+    <div class="modal">
+      <div class="modal-titulo">Reprovar lançamento</div>
+      <div class="modal-desc">Informe o motivo da reprovação. O operador será notificado para corrigir o lançamento.</div>
+      <div class="modal-frente" id="modal-frente-nome">—</div>
+      <div class="modal-label">Motivo da reprovação *</div>
+      <textarea class="modal-textarea" id="modal-comentario" maxlength="300"
+                placeholder="Ex: Frente de serviço incorreta. O colaborador estava na Frente B, não na Frente A."
+                oninput="atualizarContador()"></textarea>
+      <div class="modal-contador"><span id="modal-count">0</span>/300</div>
+      <div class="modal-acoes">
+        <button class="btn-cancelar-modal" onclick="fecharModal()">Cancelar</button>
+        <button class="btn-confirmar-reprova" id="btn-confirmar-reprova" onclick="confirmarReprova()">
+          Reprovar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, query,
+             where, updateDoc, serverTimestamp }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyATyTfAlXhjfaEbbNtGQqKXobpSO99a1mY",
+      authDomain:        "sistema-647cc.firebaseapp.com",
+      projectId:         "sistema-647cc",
+      storageBucket:     "sistema-647cc.firebasestorage.app",
+      messagingSenderId: "556262040392",
+      appId:             "1:556262040392:web:fdfddc34c5e10002aa097d"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    let todosLancamentos = [];
+    let lancamentosFiltrados = [];
+    let lancamentoParaReprovar = null;
+
+    // ── Auth ──
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = '647cc-login.html'; return; }
+      // Filtra hoje por padrão
+      const hoje = new Date().toISOString().split('T')[0];
+      document.getElementById('filtro-data').value = hoje;
+      await carregarTudo();
+    });
+
+    // ── Carrega lançamentos ──
+    async function carregarTudo() {
+      const dataFiltro = document.getElementById('filtro-data').value;
+
+      let q;
+      if (dataFiltro) {
+        q = query(collection(db, 'lancamentos_manha'), where('dataStr', '==', dataFiltro));
+      } else {
+        q = query(collection(db, 'lancamentos_manha'));
+      }
+
+      const snap = await getDocs(q);
+      todosLancamentos = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.criadoEm?.seconds||0) - (a.criadoEm?.seconds||0));
+
+      // Popula filtros
+      popularFiltros();
+      aplicarFiltros();
+    }
+
+    function popularFiltros() {
+      const frentes   = [...new Set(todosLancamentos.map(l => l.frenteNome))].sort();
+      const operadores = [...new Set(todosLancamentos.map(l => l.operadorNome))].sort();
+
+      const selFrente = document.getElementById('filtro-frente');
+      const valFrente = selFrente.value;
+      selFrente.innerHTML = '<option value="">Todas</option>' +
+        frentes.map(f => `<option value="${f}" ${f===valFrente?'selected':''}>${f}</option>`).join('');
+
+      const selOp = document.getElementById('filtro-operador');
+      const valOp = selOp.value;
+      selOp.innerHTML = '<option value="">Todos</option>' +
+        operadores.map(o => `<option value="${o}" ${o===valOp?'selected':''}>${capitalizar(o)}</option>`).join('');
+    }
+
+    window.aplicarFiltros = function() {
+      const dataFiltro  = document.getElementById('filtro-data').value;
+      const frenteFiltro = document.getElementById('filtro-frente').value;
+      const opFiltro    = document.getElementById('filtro-operador').value;
+
+      // Se mudou a data, recarrega do Firebase
+      const dataAtual = todosLancamentos[0]?.dataStr;
+      if (dataFiltro && dataFiltro !== dataAtual && todosLancamentos.length > 0) {
+        carregarTudo(); return;
+      }
+
+      lancamentosFiltrados = todosLancamentos.filter(l => {
+        if (dataFiltro  && l.dataStr     !== dataFiltro)  return false;
+        if (frenteFiltro && l.frenteNome !== frenteFiltro) return false;
+        if (opFiltro    && l.operadorNome !== opFiltro)    return false;
+        return true;
+      });
+
+      atualizarContadores();
+      renderizarLista();
+    };
+
+    function atualizarContadores() {
+      const l = lancamentosFiltrados;
+      document.getElementById('cnt-total').textContent    = l.length;
+      document.getElementById('cnt-pendente').textContent = l.filter(x => !x.statusAprovacao || x.statusAprovacao === 'pendente').length;
+      document.getElementById('cnt-aprovado').textContent = l.filter(x => x.statusAprovacao === 'aprovado').length;
+      document.getElementById('cnt-reprovado').textContent= l.filter(x => x.statusAprovacao === 'reprovado').length;
+    }
+
+    function renderizarLista() {
+      const area = document.getElementById('listaArea');
+
+      if (lancamentosFiltrados.length === 0) {
+        area.innerHTML = `
+          <div class="state-vazio">
+            <div class="state-vazio-icon">📭</div>
+            <div class="state-vazio-titulo">Nenhum lançamento encontrado</div>
+            <div class="state-vazio-desc">Tente ajustar os filtros ou aguarde os operadores fazerem os lançamentos.</div>
+          </div>`;
+        return;
+      }
+
+      area.innerHTML = lancamentosFiltrados.map(l => renderizarCard(l)).join('');
+    }
+
+    function renderizarCard(l) {
+      const status = l.statusAprovacao || 'pendente';
+      const statusLabel = { pendente: 'Pendente', aprovado: 'Aprovado', reprovado: 'Reprovado' };
+      const statusClass = { pendente: 's-pendente', aprovado: 's-aprovado', reprovado: 's-reprovado' };
+      const cardClass   = { pendente: '', aprovado: 'aprovado-card', reprovado: 'reprovado-card' };
+
+      const tardeConcluido = l.statusTarde === 'concluido';
+
+      // Tabela colaboradores
+      const linhasColab = (l.colaboradores || []).map(c => {
+        const nota = c.nota !== undefined ? c.nota : '—';
+        let notaClass = '';
+        if      (nota <= 3)  notaClass = 'nota-baixa';
+        else if (nota <= 6)  notaClass = 'nota-media';
+        else if (nota <= 8)  notaClass = 'nota-boa';
+        else                 notaClass = 'nota-otima';
+
+        return `<tr>
+          <td><div class="td-nome">${capitalizar(c.nome)}</div><div class="td-mat">${c.matricula}</div></td>
+          <td class="td-turno">${c.turno}h</td>
+          <td>${nota !== '—' ? `<span class="nota-badge ${notaClass}">★ ${nota}</span>` : '<span style="color:var(--cinza-400);font-size:12px">Aguardando</span>'}</td>
+          <td class="td-producao">${c.producaoQtd ? `${c.producaoQtd} ${c.producaoUnidade||''}` : '—'}</td>
+          <td class="td-obs">${c.obs || ''}</td>
+        </tr>`;
+      }).join('');
+
+      // Comentário reprovação
+      const comentarioHtml = (status === 'reprovado' && l.comentarioReprovacao) ? `
+        <div class="reprova-comment">
+          <div class="reprova-comment-label">⚠️ Motivo da reprovação</div>
+          <div class="reprova-comment-texto">${l.comentarioReprovacao}</div>
+        </div>` : '';
+
+      // Botões de ação
+      let acoesHtml = '';
+      if (status === 'pendente') {
+        acoesHtml = `
+          <div class="card-acoes">
+            <div class="acoes-esq">
+              <button class="btn-reprovar" onclick="abrirModalReprova('${l.id}','${l.frenteNome}')">
+                ✕ Reprovar
+              </button>
+              <button class="btn-aprovar" onclick="aprovar('${l.id}')">
+                ✓ Aprovar
+              </button>
+            </div>
+            <div class="acoes-status" style="color:var(--cinza-400)">
+              ${tardeConcluido ? '📋 Notas registradas' : '⏳ Aguardando encerramento do dia'}
+            </div>
+          </div>`;
+      } else if (status === 'aprovado') {
+        acoesHtml = `
+          <div class="card-acoes">
+            <div class="acoes-status" style="color:var(--verde)">✓ Aprovado por você</div>
+            <button class="btn-desfazer" onclick="desfazer('${l.id}')">Desfazer aprovação</button>
+          </div>`;
+      } else {
+        acoesHtml = `
+          <div class="card-acoes">
+            <div class="acoes-status" style="color:var(--vermelho)">✕ Reprovado</div>
+            <button class="btn-desfazer" onclick="desfazer('${l.id}')">Desfazer reprovação</button>
+          </div>`;
+      }
+
+      // Data formatada
+      const dataFmt = l.dataStr
+        ? new Date(l.dataStr + 'T12:00:00').toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'})
+        : '—';
+
+      return `
+        <div class="lancamento-card ${cardClass[status]}" id="card-${l.id}">
+          <div class="card-header">
+            <div class="card-header-info">
+              <div class="card-frente">${l.frenteNome} ${l.frenteCodigo ? `<span style="font-size:11px;color:var(--cinza-400);font-weight:400">(${l.frenteCodigo})</span>` : ''}</div>
+              <div class="card-meta">
+                📅 ${dataFmt} &nbsp;·&nbsp;
+                👤 ${capitalizar(l.operadorNome)} &nbsp;·&nbsp;
+                👥 ${l.totalColaboradores} colaboradores &nbsp;·&nbsp;
+                ⏱ ${l.totalHoras?.toFixed(1)}h &nbsp;·&nbsp;
+                💰 R$ ${l.custoTotalLancado?.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+                ${l.mediaNotas ? `&nbsp;·&nbsp; ⭐ Média ${l.mediaNotas}` : ''}
+              </div>
+            </div>
+            <span class="status-badge ${statusClass[status]}">${statusLabel[status]}</span>
+          </div>
+          <table class="colab-table">
+            <thead>
+              <tr>
+                <th>Colaborador</th>
+                <th>Turno</th>
+                <th>Nota</th>
+                <th>Produção</th>
+                <th>Obs.</th>
+              </tr>
+            </thead>
+            <tbody>${linhasColab}</tbody>
+          </table>
+          ${comentarioHtml}
+          ${acoesHtml}
+        </div>`;
+    }
+
+    // ── Aprovar ──
+    window.aprovar = async function(id) {
+      await updateDoc(doc(db, 'lancamentos_manha', id), {
+        statusAprovacao:  'aprovado',
+        aprovadoEm:       serverTimestamp(),
+        comentarioReprovacao: ''
+      });
+      const l = todosLancamentos.find(x => x.id === id);
+      if (l) { l.statusAprovacao = 'aprovado'; l.comentarioReprovacao = ''; }
+      atualizarContadores();
+      renderizarLista();
+    };
+
+    // ── Desfazer ──
+    window.desfazer = async function(id) {
+      await updateDoc(doc(db, 'lancamentos_manha', id), {
+        statusAprovacao: 'pendente',
+        comentarioReprovacao: ''
+      });
+      const l = todosLancamentos.find(x => x.id === id);
+      if (l) { l.statusAprovacao = 'pendente'; l.comentarioReprovacao = ''; }
+      atualizarContadores();
+      renderizarLista();
+    };
+
+    // ── Modal reprovação ──
+    window.abrirModalReprova = function(id, frenteNome) {
+      lancamentoParaReprovar = id;
+      document.getElementById('modal-frente-nome').textContent = frenteNome;
+      document.getElementById('modal-comentario').value = '';
+      document.getElementById('modal-count').textContent = '0';
+      document.getElementById('modalReprova').classList.add('aberto');
+    };
+
+    window.fecharModal = function() {
+      document.getElementById('modalReprova').classList.remove('aberto');
+      lancamentoParaReprovar = null;
+    };
+
+    window.atualizarContador = function() {
+      const val = document.getElementById('modal-comentario').value;
+      document.getElementById('modal-count').textContent = val.length;
+    };
+
+    window.confirmarReprova = async function() {
+      const comentario = document.getElementById('modal-comentario').value.trim();
+      if (!comentario) {
+        document.getElementById('modal-comentario').style.borderColor = 'var(--vermelho)';
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirmar-reprova');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando…';
+
+      try {
+        await updateDoc(doc(db, 'lancamentos_manha', lancamentoParaReprovar), {
+          statusAprovacao:      'reprovado',
+          comentarioReprovacao: comentario,
+          reprovadoEm:          serverTimestamp()
+        });
+
+        const l = todosLancamentos.find(x => x.id === lancamentoParaReprovar);
+        if (l) { l.statusAprovacao = 'reprovado'; l.comentarioReprovacao = comentario; }
+
+        fecharModal();
+        atualizarContadores();
+        renderizarLista();
+      } catch(e) {
+        alert('Erro ao reprovar: ' + e.message);
+      } finally {
+        btn.disabled = false; btn.innerHTML = 'Reprovar';
+      }
+    };
+
+    // Fecha modal ao clicar fora
+    document.getElementById('modalReprova').addEventListener('click', function(e) {
+      if (e.target === this) fecharModal();
+    });
+
+    function capitalizar(str) {
+      if (!str) return '';
+      return str.split(' ').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>647CC · Lançamento — Fim do Dia</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --azul:      #06428E;
+      --azul-dk:   #04316A;
+      --azul-bg:   #EBF2FC;
+      --vermelho:  #CB0935;
+      --verde:     #196B24;
+      --verde-bg:  #EBF5EC;
+      --laranja:   #E97132;
+      --cinza-900: #171717;
+      --cinza-700: #3A3A3A;
+      --cinza-400: #8A8A8A;
+      --cinza-200: #E8E8E8;
+      --cinza-100: #F5F7FA;
+      --branco:    #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cinza-100);
+      color: var(--cinza-900);
+      min-height: 100vh;
+      padding-bottom: 48px;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--azul);
+      padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px; position: sticky; top: 0; z-index: 100;
+      border-bottom: 3px solid var(--vermelho);
+    }
+    .topbar-esq { display: flex; align-items: center; gap: 16px; }
+    .topbar-logo  { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
+    .topbar-sep   { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+    .topbar-titulo{ font-size: 15px; font-weight: 600; color: var(--branco); }
+    .btn-voltar {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px; padding: 7px 14px; color: var(--branco);
+      font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer;
+    }
+    .btn-voltar:hover { background: rgba(255,255,255,0.2); }
+
+    .container { max-width: 680px; margin: 0 auto; padding: 32px 16px; }
+
+    /* ── Info bar ── */
+    .info-bar {
+      background: var(--azul-bg); border: 1px solid rgba(6,66,142,0.15);
+      border-radius: 8px; padding: 12px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
+    }
+    .info-bar-item { display: flex; flex-direction: column; }
+    .info-bar-label { font-size: 10px; font-weight: 600; color: var(--azul); text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-bar-valor { font-size: 14px; font-weight: 700; color: var(--cinza-900); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+    .info-bar-sep   { width: 1px; height: 36px; background: rgba(6,66,142,0.15); }
+
+    /* ── Estado de carregamento / vazio ── */
+    .state-card {
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 10px; padding: 48px 32px; text-align: center;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .state-icon  { font-size: 40px; margin-bottom: 16px; }
+    .state-titulo{ font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .state-desc  { font-size: 13px; color: var(--cinza-400); line-height: 1.6; }
+
+    /* ── Card de lançamento do dia ── */
+    .lancamento-card {
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 10px; overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06); margin-bottom: 20px;
+    }
+
+    .lancamento-header {
+      padding: 16px 24px; border-bottom: 1px solid var(--cinza-200);
+      background: var(--cinza-100);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+
+    .lancamento-frente   { font-size: 15px; font-weight: 700; }
+    .lancamento-detalhe  { font-size: 11px; color: var(--cinza-400); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+    .status-badge {
+      font-size: 10px; font-weight: 700; border-radius: 4px;
+      padding: 3px 9px; font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;
+    }
+    .status-pendente   { background: rgba(233,113,50,0.1);  color: var(--laranja); border: 1px solid rgba(233,113,50,0.2); }
+    .status-aprovado   { background: rgba(25,107,36,0.08);  color: var(--verde);   border: 1px solid rgba(25,107,36,0.2); }
+    .status-concluido  { background: rgba(6,66,142,0.08);   color: var(--azul);    border: 1px solid rgba(6,66,142,0.2); }
+
+    /* ── Colaborador row ── */
+    .colab-row {
+      border-bottom: 1px solid var(--cinza-200);
+      padding: 20px 24px;
+    }
+    .colab-row:last-child { border-bottom: none; }
+
+    .colab-row-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+
+    .colab-avatar {
+      width: 36px; height: 36px; background: var(--azul-bg);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--azul); flex-shrink: 0;
+    }
+
+    .colab-row-nome    { font-size: 14px; font-weight: 700; }
+    .colab-row-detalhe { font-size: 11px; color: var(--cinza-400); font-family: 'JetBrains Mono', monospace; }
+
+    .colab-turno-badge {
+      margin-left: auto;
+      font-size: 11px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+      color: var(--azul); background: var(--azul-bg);
+      border: 1px solid rgba(6,66,142,0.15); border-radius: 4px; padding: 3px 8px;
+    }
+
+    /* ── Nota ── */
+    .campos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 480px) { .campos-grid { grid-template-columns: 1fr; } }
+
+    .campo-label {
+      font-size: 11px; font-weight: 600; color: var(--cinza-700);
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px;
+    }
+
+    /* Nota slider */
+    .nota-wrap { position: relative; }
+
+    .nota-display {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+    }
+
+    .nota-numero {
+      font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+      min-width: 40px;
+    }
+
+    .nota-stars { display: flex; gap: 3px; }
+    .star { font-size: 14px; transition: opacity 0.1s; }
+
+    input[type="range"] {
+      width: 100%; accent-color: var(--azul);
+      height: 4px; cursor: pointer;
+    }
+
+    .nota-labels {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--cinza-400); margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Produção */
+    .producao-wrap { display: flex; gap: 8px; }
+
+    .producao-qtd {
+      flex: 1;
+      background: var(--cinza-100); border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 11px 13px;
+      color: var(--cinza-900); font-size: 14px; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .producao-qtd:focus {
+      border-color: var(--azul); box-shadow: 0 0 0 3px rgba(6,66,142,0.1);
+      background: var(--branco);
+    }
+    .producao-qtd::placeholder { color: var(--cinza-400); }
+
+    .producao-unidade {
+      width: 90px;
+      background: var(--cinza-100); border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 11px 10px;
+      color: var(--cinza-900); font-size: 13px; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+    }
+    .producao-unidade:focus {
+      border-color: var(--azul); box-shadow: 0 0 0 3px rgba(6,66,142,0.1);
+      background: var(--branco);
+    }
+
+    .obs-input {
+      width: 100%;
+      background: var(--cinza-100); border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 10px 13px;
+      color: var(--cinza-900); font-size: 13px; font-family: 'Inter', sans-serif;
+      outline: none; resize: none; transition: border-color 0.15s, box-shadow 0.15s;
+      margin-top: 12px;
+    }
+    .obs-input:focus {
+      border-color: var(--azul); box-shadow: 0 0 0 3px rgba(6,66,142,0.1);
+      background: var(--branco);
+    }
+    .obs-input::placeholder { color: var(--cinza-400); }
+
+    /* ── Já preenchido (readonly) ── */
+    .colab-row.concluido { background: rgba(25,107,36,0.03); }
+
+    .resumo-concluido {
+      display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    }
+
+    .resumo-chip {
+      background: var(--cinza-100); border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 6px 12px;
+      font-size: 12px; font-weight: 600;
+    }
+
+    .resumo-chip.nota-chip { color: var(--azul); border-color: rgba(6,66,142,0.2); background: var(--azul-bg); }
+    .resumo-chip.prod-chip { color: var(--verde); border-color: rgba(25,107,36,0.2); background: var(--verde-bg); }
+
+    /* ── Botão confirmar ── */
+    .btn-confirmar {
+      width: 100%; background: var(--azul); color: var(--branco);
+      border: none; border-radius: 8px; padding: 15px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: background 0.15s, transform 0.1s; font-family: 'Inter', sans-serif;
+    }
+    .btn-confirmar:hover  { background: var(--azul-dk); }
+    .btn-confirmar:active { transform: scale(0.99); }
+    .btn-confirmar:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .msg {
+      display: none; border-radius: 6px; padding: 11px 14px;
+      font-size: 13px; font-weight: 500; margin-top: 14px;
+    }
+    .msg.erro    { background: rgba(203,9,53,0.07);  color: var(--vermelho); border: 1px solid rgba(203,9,53,0.2);  display: block; }
+    .msg.sucesso { background: rgba(25,107,36,0.07); color: var(--verde);    border: 1px solid rgba(25,107,36,0.2); display: block; }
+    .msg.aviso   { background: rgba(233,113,50,0.08); color: var(--laranja); border: 1px solid rgba(233,113,50,0.2); display: block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+
+    /* ── Sucesso final ── */
+    .sucesso-state {
+      display: none; text-align: center;
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 10px; padding: 48px 32px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .sucesso-icon  { font-size: 40px; margin-bottom: 16px; }
+    .sucesso-titulo{ font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .sucesso-desc  { font-size: 13px; color: var(--cinza-400); line-height: 1.6; margin-bottom: 24px; }
+
+    .btn-voltar-home {
+      background: var(--azul); color: var(--branco);
+      border: none; border-radius: 6px; padding: 12px 28px;
+      font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;
+    }
+    .btn-voltar-home:hover { background: var(--azul-dk); }
+
+    @media (max-width: 480px) {
+      .topbar { padding: 0 16px; }
+      .container { padding: 20px 12px; }
+      .colab-row { padding: 16px; }
+      .info-bar-sep { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-esq">
+      <span class="topbar-logo">Direcional</span>
+      <span class="topbar-sep"></span>
+      <span class="topbar-titulo">Lançamento — Fim do Dia</span>
+    </div>
+    <button class="btn-voltar" onclick="location.href='647cc-login.html'">← Voltar</button>
+  </div>
+
+  <div class="container">
+
+    <div class="info-bar">
+      <div class="info-bar-item">
+        <span class="info-bar-label">Data</span>
+        <span class="info-bar-valor" id="barData">—</span>
+      </div>
+      <div class="info-bar-sep"></div>
+      <div class="info-bar-item">
+        <span class="info-bar-label">Hora</span>
+        <span class="info-bar-valor" id="barHora">—</span>
+      </div>
+      <div class="info-bar-sep"></div>
+      <div class="info-bar-item">
+        <span class="info-bar-label">Operador</span>
+        <span class="info-bar-valor" id="barOperador">—</span>
+      </div>
+    </div>
+
+    <!-- Área principal -->
+    <div id="mainArea"></div>
+
+    <!-- Sucesso final -->
+    <div class="sucesso-state" id="sucessoFinal">
+      <div class="sucesso-icon">🏁</div>
+      <div class="sucesso-titulo">Dia encerrado!</div>
+      <div class="sucesso-desc">Todas as notas e produções foram registradas.<br>O engenheiro irá aprovar os lançamentos.</div>
+      <button class="btn-voltar-home" onclick="location.href='647cc-login.html'">Voltar ao início</button>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, getDoc, doc, query,
+             where, updateDoc, serverTimestamp }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyATyTfAlXhjfaEbbNtGQqKXobpSO99a1mY",
+      authDomain:        "sistema-647cc.firebaseapp.com",
+      projectId:         "sistema-647cc",
+      storageBucket:     "sistema-647cc.firebasestorage.app",
+      messagingSenderId: "556262040392",
+      appId:             "1:556262040392:web:fdfddc34c5e10002aa097d"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    let usuarioAtual  = null;
+    let lancamentos   = [];   // lançamentos do dia
+    // notas[lancId][colabId] = { nota, qtd, unidade, obs }
+    let notas = {};
+
+    // ── Clock ──
+    function atualizarRelogio() {
+      const agora = new Date();
+      document.getElementById('barData').textContent =
+        agora.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit', year:'numeric' });
+      document.getElementById('barHora').textContent =
+        agora.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    }
+    atualizarRelogio();
+    setInterval(atualizarRelogio, 30000);
+
+    // ── Auth ──
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = '647cc-login.html'; return; }
+      const snap = await getDoc(doc(db, 'usuarios', user.uid));
+      usuarioAtual = snap.exists() ? { uid: user.uid, ...snap.data() } : { uid: user.uid, nome: user.email };
+      document.getElementById('barOperador').textContent = capitalizar(usuarioAtual.nome);
+      await carregarLancamentosDia();
+    });
+
+    // ── Carrega lançamentos do dia ──
+    async function carregarLancamentosDia() {
+      const dataStr = new Date().toISOString().split('T')[0];
+      const q = query(
+        collection(db, 'lancamentos_manha'),
+        where('operadorUid', '==', usuarioAtual.uid),
+        where('dataStr',     '==', dataStr)
+      );
+      const snap = await getDocs(q);
+      lancamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarPrincipal();
+    }
+
+    function renderizarPrincipal() {
+      const area = document.getElementById('mainArea');
+
+      if (lancamentos.length === 0) {
+        area.innerHTML = `
+          <div class="state-card">
+            <div class="state-icon">📋</div>
+            <div class="state-titulo">Nenhum lançamento hoje</div>
+            <div class="state-desc">Você não fez lançamentos de manhã hoje.<br>
+              Faça primeiro o lançamento da manhã para registrar as notas ao final do dia.</div>
+          </div>`;
+        return;
+      }
+
+      // Verifica se todos já foram concluídos
+      const todosConcluidos = lancamentos.every(l => l.statusTarde === 'concluido');
+      if (todosConcluidos) {
+        area.style.display = 'none';
+        document.getElementById('sucessoFinal').style.display = 'block';
+        return;
+      }
+
+      area.innerHTML = lancamentos.map(l => renderizarLancamento(l)).join('') +
+        `<button class="btn-confirmar" id="btn-confirmar" onclick="confirmarTudo()">
+           Salvar notas e encerrar dia
+         </button>
+         <div class="msg" id="msg-geral"></div>`;
+
+      // Inicializa estado de notas para cada colaborador
+      lancamentos.forEach(l => {
+        if (!notas[l.id]) notas[l.id] = {};
+        l.colaboradores.forEach(c => {
+          if (!notas[l.id][c.id]) {
+            // Se já tem nota salva, usa ela
+            if (c.nota !== undefined) {
+              notas[l.id][c.id] = { nota: c.nota, qtd: c.producaoQtd || '', unidade: c.producaoUnidade || '', obs: c.obs || '' };
+            } else {
+              notas[l.id][c.id] = { nota: 7, qtd: '', unidade: '', obs: '' };
+            }
+          }
+        });
+      });
+
+      // Renderiza sliders
+      lancamentos.forEach(l => {
+        l.colaboradores.forEach(c => {
+          atualizarSlider(l.id, c.id, notas[l.id][c.id].nota);
+        });
+      });
+    }
+
+    function renderizarLancamento(l) {
+      const jaConcluido = l.statusTarde === 'concluido';
+      const statusLabel = { pendente: 'Pendente aprovação', aprovado: 'Aprovado', concluido: 'Encerrado' };
+      const statusClass = { pendente: 'status-pendente', aprovado: 'status-aprovado', concluido: 'status-concluido' };
+
+      const colaboradoresHtml = l.colaboradores.map(c => {
+        const iniciais = c.nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+
+        if (jaConcluido) {
+          // Modo leitura
+          return `
+            <div class="colab-row concluido">
+              <div class="colab-row-header">
+                <div class="colab-avatar">${iniciais}</div>
+                <div>
+                  <div class="colab-row-nome">${capitalizar(c.nome)}</div>
+                  <div class="colab-row-detalhe">Mat: ${c.matricula} · ${c.funcao}</div>
+                </div>
+                <div class="colab-turno-badge">${c.turno}h</div>
+              </div>
+              <div class="resumo-concluido">
+                <span class="resumo-chip nota-chip">⭐ Nota ${c.nota}/10</span>
+                ${c.producaoQtd ? `<span class="resumo-chip prod-chip">📦 ${c.producaoQtd} ${c.producaoUnidade||''}</span>` : ''}
+                ${c.obs ? `<span class="resumo-chip">💬 ${c.obs}</span>` : ''}
+              </div>
+            </div>`;
+        }
+
+        // Modo edição
+        return `
+          <div class="colab-row" id="row-${l.id}-${c.id}">
+            <div class="colab-row-header">
+              <div class="colab-avatar">${iniciais}</div>
+              <div>
+                <div class="colab-row-nome">${capitalizar(c.nome)}</div>
+                <div class="colab-row-detalhe">Mat: ${c.matricula} · ${c.funcao}</div>
+              </div>
+              <div class="colab-turno-badge">${c.turno}h</div>
+            </div>
+
+            <div class="campos-grid">
+              <!-- Nota -->
+              <div>
+                <div class="campo-label">Nota de desempenho</div>
+                <div class="nota-wrap">
+                  <div class="nota-display">
+                    <span class="nota-numero" id="nota-num-${l.id}-${c.id}">7</span>
+                    <div class="nota-stars" id="nota-stars-${l.id}-${c.id}"></div>
+                  </div>
+                  <input type="range" min="1" max="10" value="7"
+                         id="slider-${l.id}-${c.id}"
+                         oninput="onSlider('${l.id}','${c.id}',this.value)"/>
+                  <div class="nota-labels"><span>1 — Ruim</span><span>10 — Excelente</span></div>
+                </div>
+              </div>
+
+              <!-- Produção -->
+              <div>
+                <div class="campo-label">Produção física</div>
+                <div class="producao-wrap">
+                  <input type="number" class="producao-qtd" placeholder="Quantidade"
+                         id="qtd-${l.id}-${c.id}" min="0" step="0.01"
+                         oninput="onProducao('${l.id}','${c.id}')"/>
+                  <select class="producao-unidade" id="uni-${l.id}-${c.id}"
+                          onchange="onProducao('${l.id}','${c.id}')">
+                    <option value="">Un.</option>
+                    <option value="m²">m²</option>
+                    <option value="m³">m³</option>
+                    <option value="ml">ml</option>
+                    <option value="un">un</option>
+                    <option value="kg">kg</option>
+                    <option value="t">t</option>
+                    <option value="vb">vb</option>
+                    <option value="cj">cj</option>
+                  </select>
+                </div>
+                <input type="text" class="obs-input" placeholder="Observações (opcional)"
+                       id="obs-${l.id}-${c.id}" maxlength="120"
+                       oninput="onObs('${l.id}','${c.id}')"/>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="lancamento-card" id="card-${l.id}">
+          <div class="lancamento-header">
+            <div>
+              <div class="lancamento-frente">${l.frenteNome}</div>
+              <div class="lancamento-detalhe">
+                ${l.totalColaboradores} colaboradores · ${l.totalHoras?.toFixed(1)}h ·
+                R$ ${l.custoTotalLancado?.toLocaleString('pt-BR',{minimumFractionDigits:2})}
+              </div>
+            </div>
+            <span class="status-badge ${statusClass[l.statusTarde||'pendente']}">
+              ${statusLabel[l.statusTarde||'pendente']}
+            </span>
+          </div>
+          ${colaboradoresHtml}
+        </div>`;
+    }
+
+    // ── Slider ──
+    window.onSlider = function(lancId, colabId, val) {
+      notas[lancId][colabId].nota = parseInt(val);
+      atualizarSlider(lancId, colabId, val);
+    };
+
+    function atualizarSlider(lancId, colabId, val) {
+      const n   = parseInt(val);
+      const num = document.getElementById(`nota-num-${lancId}-${colabId}`);
+      const stars = document.getElementById(`nota-stars-${lancId}-${colabId}`);
+      const slider = document.getElementById(`slider-${lancId}-${colabId}`);
+      if (!num || !stars) return;
+
+      num.textContent = n;
+
+      // Cor do número por faixa
+      if      (n <= 3)  num.style.color = 'var(--vermelho)';
+      else if (n <= 6)  num.style.color = 'var(--laranja)';
+      else if (n <= 8)  num.style.color = 'var(--azul)';
+      else              num.style.color = 'var(--verde)';
+
+      // Stars
+      stars.innerHTML = Array.from({length:10}, (_,i) =>
+        `<span class="star" style="opacity:${i < n ? 1 : 0.2}">★</span>`
+      ).join('');
+
+      if (slider) slider.value = n;
+    }
+
+    window.onProducao = function(lancId, colabId) {
+      notas[lancId][colabId].qtd     = document.getElementById(`qtd-${lancId}-${colabId}`).value;
+      notas[lancId][colabId].unidade = document.getElementById(`uni-${lancId}-${colabId}`).value;
+    };
+
+    window.onObs = function(lancId, colabId) {
+      notas[lancId][colabId].obs = document.getElementById(`obs-${lancId}-${colabId}`).value;
+    };
+
+    // ── Confirmar tudo ──
+    window.confirmarTudo = async function() {
+      // Valida se todos têm produção informada
+      const semProducao = [];
+      lancamentos.forEach(l => {
+        if (l.statusTarde === 'concluido') return;
+        l.colaboradores.forEach(c => {
+          const n = notas[l.id]?.[c.id];
+          if (!n || !n.qtd) semProducao.push(c.nome);
+        });
+      });
+
+      if (semProducao.length > 0) {
+        showMsg(`Informe a produção de: ${semProducao.map(capitalizar).join(', ')}`, 'erro');
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirmar');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando…';
+
+      try {
+        for (const l of lancamentos) {
+          if (l.statusTarde === 'concluido') continue;
+
+          // Monta colaboradores com notas
+          const colaboradoresAtualizados = l.colaboradores.map(c => {
+            const n = notas[l.id][c.id];
+            return {
+              ...c,
+              nota:            n.nota,
+              producaoQtd:     parseFloat(n.qtd) || 0,
+              producaoUnidade: n.unidade || '',
+              obs:             n.obs || ''
+            };
+          });
+
+          // Médias para o lançamento
+          const mediaNotas = colaboradoresAtualizados.reduce((s,c) => s + c.nota, 0) / colaboradoresAtualizados.length;
+
+          await updateDoc(doc(db, 'lancamentos_manha', l.id), {
+            colaboradores:   colaboradoresAtualizados,
+            mediaNotas:      Math.round(mediaNotas * 10) / 10,
+            statusTarde:     'concluido',
+            encerradoEm:     serverTimestamp()
+          });
+        }
+
+        // Mostra sucesso
+        document.getElementById('mainArea').style.display = 'none';
+        document.getElementById('sucessoFinal').style.display = 'block';
+
+      } catch(e) {
+        showMsg('Erro ao salvar: ' + e.message, 'erro');
+        btn.disabled = false; btn.innerHTML = 'Salvar notas e encerrar dia';
+      }
+    };
+
+    function showMsg(texto, tipo) {
+      const el = document.getElementById('msg-geral');
+      if (!el) return;
+      el.textContent = texto; el.className = `msg ${tipo}`;
+      setTimeout(() => { el.className = 'msg'; }, 6000);
+    }
+
+    function capitalizar(str) {
+      if (!str) return '';
+      return str.split(' ').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+    }
+  </script>
+</body>
+</html>
