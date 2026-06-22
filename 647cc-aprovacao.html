@@ -559,7 +559,7 @@
           <td class="td-turno">${c.turno}h</td>
           <td>${nota !== '—' ? `<span class="nota-badge ${notaClass}">★ ${nota}</span>` : '<span style="color:var(--cinza-400);font-size:12px">Aguardando</span>'}</td>
           <td class="td-producao">${c.producaoQtd ? `${c.producaoQtd} ${c.producaoUnidade||''}` : '—'}</td>
-          <td class="td-obs">${c.obs || ''}</td>
+          <td class="td-obs">${c.obs || c.obsManha || ''}</td>
           <td class="td-status-colab">${statusColab}</td>
         </tr>`;
       }).join('');

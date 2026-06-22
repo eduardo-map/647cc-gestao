@@ -332,6 +332,24 @@
     }
     .btn-remover:hover { color: var(--vermelho); }
 
+    /* ── Campo observação no sel-item ── */
+    .sel-obs-input {
+      width: 100%;
+      margin-top: 8px;
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      color: var(--cinza-900);
+      outline: none;
+      resize: none;
+      transition: border-color 0.15s;
+    }
+    .sel-obs-input:focus { border-color: var(--azul); background: var(--branco); }
+    .sel-obs-input::placeholder { color: var(--cinza-400); }
+
     /* ── Botão confirmar ── */
     .btn-confirmar {
       width: 100%;
@@ -665,20 +683,33 @@
     });
 
     // ── Colaboradores ocupados hoje ──
+    // Mapa: { colaboradorId: horasLancadasHoje }
+    let horasLancadasHoje = {};
+
     async function carregarColaboradoresOcupados() {
       const dataStr = new Date().toISOString().split('T')[0];
-      // Busca todos os lançamentos de hoje (qualquer operador, qualquer status que não seja reprovado)
       const snap = await getDocs(query(
         collection(db, 'lancamentos_manha'),
         where('dataStr', '==', dataStr)
       ));
+      horasLancadasHoje = {};
       colaboradoresOcupados = new Set();
+
       snap.docs.forEach(d => {
         const l = d.data();
-        // Só bloqueia se o lançamento não foi reprovado
-        if (l.statusAprovacao !== 'reprovado') {
-          (l.colaboradores || []).forEach(c => colaboradoresOcupados.add(c.id));
-        }
+        // Ignora lançamentos inteiramente reprovados
+        if (l.statusAprovacao === 'reprovado') return;
+        (l.colaboradores || []).forEach(c => {
+          // Ignora colaboradores reprovados individualmente
+          if (c.reprovadoIndividual) return;
+          const horas = parseFloat(c.turno) || 0;
+          horasLancadasHoje[c.id] = (horasLancadasHoje[c.id] || 0) + horas;
+        });
+      });
+
+      // Bloqueia quem já atingiu 8,8h no dia
+      Object.entries(horasLancadasHoje).forEach(([id, horas]) => {
+        if (horas >= 8.8) colaboradoresOcupados.add(id);
       });
     }
 
@@ -722,7 +753,7 @@
           <div class="colab-check">${selecionados[c.id] ? '✓' : (ocupado ? '—' : '')}</div>
           <div class="colab-info">
             <div class="colab-nome">${c.nome}</div>
-            <div class="colab-detalhe">Mat: ${c.matricula} · ${c.encarregado}${ocupado ? ' · <span style="color:var(--vermelho)">já apropriado hoje</span>' : ''}</div>
+            <div class="colab-detalhe">Mat: ${c.matricula} · ${c.encarregado}${ocupado ? ` · <span style="color:var(--vermelho)">limite 8,8h atingido (${(horasLancadasHoje[c.id]||0).toFixed(1)}h lançadas)</span>` : (horasLancadasHoje[c.id] ? ` · <span style="color:var(--laranja)">${(horasLancadasHoje[c.id]).toFixed(1)}h lançadas hoje</span>` : '')}</div>
           </div>
           <span class="colab-funcao-badge" style="${ocupado ? 'opacity:0.45' : ''}">${c.funcao}</span>
         </div>`;
@@ -779,7 +810,7 @@
       }
 
       area.innerHTML = lista.map(c => `
-        <div class="sel-item" id="sel-${c.id}">
+        <div class="sel-item" id="sel-${c.id}" style="flex-wrap:wrap">
           <div class="sel-item-info">
             <div class="sel-item-nome">${c.nome}</div>
             <div class="sel-item-mat">Mat: ${c.matricula} · ${c.funcao}</div>
@@ -791,6 +822,9 @@
                     onclick="setTurno('${c.id}', '4.4')">4,4h</button>
           </div>
           <button class="btn-remover" onclick="removerColab('${c.id}')" title="Remover">×</button>
+          <textarea class="sel-obs-input" id="obs-${c.id}" rows="1"
+                    placeholder="Observação (ex: local de atuação, atividade específica…)"
+                    oninput="setObs('${c.id}', this.value)">${c.obs || ''}</textarea>
         </div>`).join('');
     }
 
@@ -799,6 +833,10 @@
         selecionados[id].turno = turno;
         renderizarSelecionados();
       }
+    };
+
+    window.setObs = function(id, valor) {
+      if (selecionados[id]) selecionados[id].obs = valor;
     };
 
     window.removerColab = function(id) {
@@ -826,18 +864,21 @@
       try {
         const frente  = frentesMap[frenteId];
         const agora   = new Date();
-        const dataStr = agora.toISOString().split('T')[0];
 
-        // Verifica duplicidade: mesmo operador + mesma frente + mesmo dia
-        const qDup = query(
-          collection(db, 'lancamentos_manha'),
-          where('operadorUid', '==', usuarioAtual.uid),
-          where('frenteId',    '==', frenteId),
-          where('dataStr',     '==', dataStr)
-        );
-        const dupSnap = await getDocs(qDup);
-        if (!dupSnap.empty) {
-          showMsg('Já existe um lançamento seu para esta frente hoje. Use o histórico abaixo para consultar.', 'aviso');
+        // Verifica limite de 8,8h por colaborador no dia
+        // Recarrega horas atuais antes de validar
+        await carregarColaboradoresOcupados();
+        const dataStr = agora.toISOString().split('T')[0];
+        const excedentes = lista.filter(c => {
+          const jaLancadas = horasLancadasHoje[c.id] || 0;
+          return (jaLancadas + parseFloat(c.turno)) > 8.8 + 0.01; // margem float
+        });
+        if (excedentes.length > 0) {
+          const nomes = excedentes.map(c => {
+            const ja = (horasLancadasHoje[c.id]||0).toFixed(1);
+            return `${c.nome} (${ja}h já lançadas)`;
+          }).join(', ');
+          showMsg(`Limite de 8,8h excedido para: ${nomes}. Ajuste o turno.`, 'erro');
           btn.disabled = false; btn.innerHTML = 'Confirmar lançamento';
           return;
         }
@@ -851,7 +892,8 @@
           encarregado: c.encarregado,
           turno:      parseFloat(c.turno),
           custoHora:  c.custoHora || 0,
-          custoLancado: (c.custoHora || 0) * parseFloat(c.turno)
+          custoLancado: (c.custoHora || 0) * parseFloat(c.turno),
+          obs:        c.obs || ''
         }));
 
         const custoTotalLancado = colaboradoresData.reduce((s, c) => s + c.custoLancado, 0);
@@ -938,7 +980,7 @@
         const l = d.data();
         const linhas = l.colaboradores.map(c => `
           <div class="hist-linha">
-            <span class="hist-nome">${c.nome}</span>
+            <span class="hist-nome">${c.nome}${c.obs ? `<span style="font-size:10px;color:var(--cinza-400);font-weight:400;margin-left:6px">${c.obs}</span>` : ''}</span>
             <span class="hist-mat">${c.matricula}</span>
             <span class="hist-turno">${c.turno}h</span>
           </div>`).join('');
