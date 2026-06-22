@@ -527,6 +527,89 @@
       font-style: italic; margin-top: 2px;
     }
 
+    /* ── Edição de reprovados ── */
+    .rep-card.editando { border-color: rgba(6,66,142,0.4); }
+
+    .rep-edit-area {
+      padding: 16px 20px;
+      background: var(--azul-bg);
+      border-top: 1px solid rgba(6,66,142,0.15);
+    }
+
+    .rep-edit-label {
+      font-size: 11px; font-weight: 700; color: var(--azul);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+
+    .rep-edit-textarea {
+      width: 100%;
+      background: var(--branco);
+      border: 1px solid rgba(6,66,142,0.25);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      color: var(--cinza-900);
+      resize: none;
+      outline: none;
+      min-height: 80px;
+      transition: border-color 0.15s;
+    }
+    .rep-edit-textarea:focus { border-color: var(--azul); box-shadow: 0 0 0 3px rgba(6,66,142,0.1); }
+    .rep-edit-textarea::placeholder { color: var(--cinza-400); }
+
+    .rep-edit-acoes {
+      display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end;
+    }
+
+    .btn-cancelar-edit {
+      background: transparent; border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 8px 16px;
+      font-size: 12px; font-weight: 600; color: var(--cinza-700);
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: border-color 0.15s;
+    }
+    .btn-cancelar-edit:hover { border-color: var(--cinza-400); }
+
+    .btn-reencaminhar {
+      background: var(--azul); color: var(--branco);
+      border: none; border-radius: 6px; padding: 8px 18px;
+      font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: background 0.15s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .btn-reencaminhar:hover { background: var(--azul-dk); }
+    .btn-reencaminhar:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .rep-card-acoes {
+      padding: 12px 20px;
+      border-top: 1px solid var(--cinza-200);
+      display: flex; justify-content: flex-end;
+    }
+
+    .btn-editar-rep {
+      background: transparent; border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 7px 16px;
+      font-size: 12px; font-weight: 600; color: var(--cinza-700);
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+    }
+    .btn-editar-rep:hover { border-color: var(--azul); color: var(--azul); }
+
+    .rep-colab-linha.tem-edit { flex-wrap: wrap; }
+    .rep-colab-edit-obs {
+      width: 100%; margin-top: 8px;
+      background: var(--branco);
+      border: 1px solid rgba(6,66,142,0.25);
+      border-radius: 6px; padding: 8px 10px;
+      font-size: 12px; font-family: 'Inter', sans-serif;
+      color: var(--cinza-900); outline: none; resize: none;
+      transition: border-color 0.15s;
+    }
+    .rep-colab-edit-obs:focus { border-color: var(--azul); }
+    .rep-colab-edit-obs::placeholder { color: var(--cinza-400); }
+
     .rep-vazio {
       text-align: center;
       padding: 48px 24px;
@@ -794,7 +877,7 @@
     import { getAuth, onAuthStateChanged }
                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, getDoc, doc, query,
-             where, orderBy, serverTimestamp, Timestamp }
+             where, orderBy, serverTimestamp, updateDoc, Timestamp }
                                from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -841,12 +924,7 @@
       await carregarColaboradoresOcupados();
       await carregarColaboradores();
       await carregarHistoricoDia();
-      const qtdRep = await atualizarBadgeReprovados();
-      if (qtdRep > 0) {
-        // Abre automaticamente a aba de reprovados para chamar atenção
-        const abaBtn = document.getElementById('aba-reprovados');
-        trocarAbaLanc('reprovados', abaBtn);
-      }
+      await atualizarBadgeReprovados();
     });
 
     // ── Colaboradores ocupados hoje ──
@@ -1200,36 +1278,73 @@
         // Ordena mais recentes primeiro
         itens.sort((a,b) => (b.criadoEm?.seconds||0) - (a.criadoEm?.seconds||0));
 
-        area.innerHTML = itens.map(l => {
+        // Guarda dados dos itens para edição
+        window._reprovadosItens = itens;
+
+        area.innerHTML = itens.map((l, idx) => {
           const dataFmt = l.dataStr
             ? new Date(l.dataStr + 'T12:00:00').toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'})
             : '—';
           const tipoLabel = l.tipoReprova === 'lancamento' ? 'Reprovado inteiro' : 'Reprovação parcial';
 
-          // Colaboradores: destacar os reprovados individualmente ou todos se for reprovação total
-          const colabsHtml = (l.colaboradores || []).map(c => {
+          // Colaboradores reprovados
+          const colabsHtml = (l.colaboradores || []).map((c, ci) => {
             const isRepInd = l.tipoReprova === 'individual' && c.reprovadoIndividual;
             const isRepTot = l.tipoReprova === 'lancamento';
-            if (!isRepInd && !isRepTot) return ''; // na reprovação individual, pula os ok
+            if (!isRepInd && !isRepTot) return '';
             return `
-              <div class="rep-colab-linha">
-                <div>
+              <div class="rep-colab-linha" id="repcolab-${idx}-${ci}">
+                <div style="flex:1">
                   <div class="rep-colab-nome ${isRepInd || isRepTot ? 'rep-colab-verm' : ''}">${c.nome}</div>
-                  ${isRepInd && c.motivoReprovacaoIndividual ? `<div class="rep-motivo-ind">↳ ${c.motivoReprovacaoIndividual}</div>` : ''}
+                  ${isRepInd && c.motivoReprovacaoIndividual
+                    ? `<div class="rep-motivo-ind">↳ Motivo: ${c.motivoReprovacaoIndividual}</div>`
+                    : ''}
+                  ${c.obs ? `<div style="font-size:11px;color:var(--cinza-400);margin-top:2px">Obs: ${c.obs}</div>` : ''}
                 </div>
                 <span class="rep-colab-mat">${c.matricula}</span>
                 <span class="rep-colab-turno">${c.turno}h</span>
+                ${isRepInd ? `
+                  <textarea class="rep-colab-edit-obs" id="edit-obs-${idx}-${ci}" rows="2"
+                    placeholder="Corrija a observação deste colaborador (ex: local correto de atuação)…">${c.obs || ''}</textarea>
+                  <div style="width:100%;display:flex;justify-content:flex-end;margin-top:6px">
+                    <button class="btn-reencaminhar" onclick="reencaminharIndividual('${l.id}', ${ci}, ${idx})"
+                      id="btn-reenc-${idx}-${ci}">
+                      ↺ Reencaminhar este colaborador
+                    </button>
+                  </div>` : ''}
               </div>`;
           }).join('');
 
           const motivoHtml = (l.tipoReprova === 'lancamento' && l.comentarioReprovacao) ? `
-            <div class="rep-motivo" style="margin-bottom:0">
-              <div class="rep-motivo-label">Motivo</div>
+            <div class="rep-motivo">
+              <div class="rep-motivo-label">Motivo da reprovação pelo gestor</div>
               ${l.comentarioReprovacao}
             </div>` : '';
 
+          // Área de edição para reprovação total
+          const editAreaHtml = l.tipoReprova === 'lancamento' ? `
+            <div class="rep-edit-area" id="edit-area-${idx}" style="display:none">
+              <div class="rep-edit-label">✏️ Corrija as informações e reencaminhe para aprovação</div>
+              <textarea class="rep-edit-textarea" id="edit-obs-total-${idx}" rows="3"
+                placeholder="Descreva o que foi corrigido ou adicione uma justificativa para reencaminhamento…"></textarea>
+              <div class="rep-edit-acoes">
+                <button class="btn-cancelar-edit" onclick="cancelarEdicao(${idx})">Cancelar</button>
+                <button class="btn-reencaminhar" id="btn-reenc-total-${idx}"
+                  onclick="reencaminharLancamento('${l.id}', ${idx})">
+                  ↺ Reencaminhar para aprovação
+                </button>
+              </div>
+            </div>` : '';
+
+          const acoesBotao = l.tipoReprova === 'lancamento' ? `
+            <div class="rep-card-acoes">
+              <button class="btn-editar-rep" id="btn-edit-${idx}" onclick="abrirEdicao(${idx})">
+                ✏️ Corrigir e reencaminhar
+              </button>
+            </div>` : '';
+
           return `
-            <div class="rep-card">
+            <div class="rep-card" id="rep-card-${idx}">
               <div class="rep-card-header">
                 <div>
                   <div class="rep-frente">${l.frenteNome}</div>
@@ -1239,6 +1354,8 @@
               </div>
               ${motivoHtml}
               <div class="rep-colaboradores">${colabsHtml}</div>
+              ${editAreaHtml}
+              ${acoesBotao}
             </div>`;
         }).join('');
 
@@ -1247,9 +1364,88 @@
       }
     }
 
+    // ── Edição e reencaminhamento de reprovados ──
+
+    window.abrirEdicao = function(idx) {
+      document.getElementById(`edit-area-${idx}`).style.display = 'block';
+      document.getElementById(`btn-edit-${idx}`).style.display = 'none';
+      document.getElementById(`rep-card-${idx}`).classList.add('editando');
+      document.getElementById(`edit-obs-total-${idx}`).focus();
+    };
+
+    window.cancelarEdicao = function(idx) {
+      document.getElementById(`edit-area-${idx}`).style.display = 'none';
+      document.getElementById(`btn-edit-${idx}`).style.display = 'inline-flex';
+      document.getElementById(`rep-card-${idx}`).classList.remove('editando');
+    };
+
+    // Reencaminha lançamento inteiro reprovado de volta para pendente
+    window.reencaminharLancamento = async function(lancId, idx) {
+      const obs = document.getElementById(`edit-obs-total-${idx}`).value.trim();
+      const btn = document.getElementById(`btn-reenc-total-${idx}`);
+      btn.disabled = true; btn.innerHTML = '<span class="spinner" style="border-top-color:var(--branco)"></span> Enviando…';
+
+      try {
+        const lancRef = doc(db, 'lancamentos_manha', lancId);
+        await updateDoc(lancRef, {
+          statusAprovacao:      'pendente',
+          comentarioReprovacao: '',
+          reencaminhadoEm:      serverTimestamp(),
+          obsReencaminhamento:  obs
+        });
+
+        // Remove visualmente o card e atualiza badge
+        const card = document.getElementById(`rep-card-${idx}`);
+        card.style.transition = 'opacity 0.4s, transform 0.4s';
+        card.style.opacity = '0'; card.style.transform = 'translateX(30px)';
+        setTimeout(() => { carregarReprovados(); carregarHistoricoDia(); }, 400);
+
+      } catch(e) {
+        alert('Erro ao reencaminhar: ' + e.message);
+        btn.disabled = false; btn.innerHTML = '↺ Reencaminhar para aprovação';
+      }
+    };
+
+    // Reencaminha colaborador individual reprovado
+    window.reencaminharIndividual = async function(lancId, colabIdx, cardIdx) {
+      const obsInput = document.getElementById(`edit-obs-${cardIdx}-${colabIdx}`);
+      const novaObs = obsInput ? obsInput.value.trim() : '';
+      const btn = document.getElementById(`btn-reenc-${cardIdx}-${colabIdx}`);
+      btn.disabled = true; btn.innerHTML = '<span class="spinner" style="border-top-color:var(--branco)"></span> Enviando…';
+
+      try {
+        // Busca dados atuais do lançamento
+        const lancRef = doc(db, 'lancamentos_manha', lancId);
+        const lancSnap = await getDoc(lancRef);
+        if (!lancSnap.exists()) throw new Error('Lançamento não encontrado');
+
+        const colabs = [...lancSnap.data().colaboradores];
+        colabs[colabIdx] = {
+          ...colabs[colabIdx],
+          reprovadoIndividual:       false,
+          motivoReprovacaoIndividual: '',
+          obs: novaObs || colabs[colabIdx].obs || ''
+        };
+
+        await updateDoc(lancRef, { colaboradores: colabs });
+
+        // Animação de saída e reload
+        const linhaEl = document.getElementById(`repcolab-${cardIdx}-${colabIdx}`);
+        if (linhaEl) {
+          linhaEl.style.transition = 'opacity 0.3s';
+          linhaEl.style.opacity = '0';
+        }
+        setTimeout(() => { carregarReprovados(); carregarHistoricoDia(); }, 350);
+
+      } catch(e) {
+        alert('Erro ao reencaminhar: ' + e.message);
+        btn.disabled = false; btn.innerHTML = '↺ Reencaminhar este colaborador';
+      }
+    };
+
     // Atualiza badge ao carregar a página
     async function atualizarBadgeReprovados() {
-      if (!usuarioAtual) return 0;
+      if (!usuarioAtual) return;
       try {
         const snapRep = await getDocs(query(
           collection(db, 'lancamentos_manha'),
@@ -1274,8 +1470,7 @@
           badge.style.display = 'inline-flex';
           abaBtn.classList.add('alerta-aba');
         }
-        return total;
-      } catch(e) { return 0; }
+      } catch(e) { /* silencioso */ }
     }
 
     // ── Histórico do dia ──
@@ -1298,29 +1493,15 @@
 
       area.innerHTML = snap.docs.map(d => {
         const l = d.data();
-        const st = l.statusAprovacao || 'pendente';
-        // Verifica se tem reprovações individuais
-        const temRepInd = (l.colaboradores||[]).some(c => c.reprovadoIndividual);
-        const stEfetivo = temRepInd && st !== 'reprovado' ? 'reprovado' : st;
-        const stLabel   = temRepInd && st !== 'reprovado' ? 'Parcial reprovado' : statusLabel[st];
-
-        const linhas = l.colaboradores.map(c => {
-          const repInd = c.reprovadoIndividual;
-          return `
-          <div class="hist-linha" style="${repInd ? 'opacity:0.6' : ''}">
-            <span class="hist-nome" style="${repInd ? 'text-decoration:line-through' : ''}">
-              ${c.nome}${c.obs ? `<span style="font-size:10px;color:var(--cinza-400);font-weight:400;margin-left:6px">${c.obs}</span>` : ''}
-              ${repInd ? `<span style="font-size:10px;color:var(--vermelho);margin-left:6px">✕ reprovado</span>` : ''}
-            </span>
+        const linhas = l.colaboradores.map(c => `
+          <div class="hist-linha">
+            <span class="hist-nome">${c.nome}${c.obs ? `<span style="font-size:10px;color:var(--cinza-400);font-weight:400;margin-left:6px">${c.obs}</span>` : ''}</span>
             <span class="hist-mat">${c.matricula}</span>
             <span class="hist-turno">${c.turno}h</span>
-          </div>`;
-        }).join('');
-
-        const bordaCard = stEfetivo === 'reprovado' ? 'border-color:rgba(203,9,53,0.35)' : '';
+          </div>`).join('');
 
         return `
-          <div class="historico-card" style="margin-bottom:16px;${bordaCard}">
+          <div class="historico-card" style="margin-bottom:16px">
             <div class="historico-header">
               <div>
                 <span class="historico-titulo">${l.frenteNome}</span>
@@ -1329,13 +1510,8 @@
                   R$ ${l.custoTotalLancado?.toLocaleString('pt-BR',{minimumFractionDigits:2})}
                 </div>
               </div>
-              <span class="status-badge ${statusClass[stEfetivo]}">${stLabel}</span>
+              <span class="status-badge ${statusClass[l.status]}">${statusLabel[l.status]}</span>
             </div>
-            ${stEfetivo === 'reprovado' && l.comentarioReprovacao ? `
-            <div style="margin:0 16px 8px;padding:10px 14px;background:rgba(203,9,53,0.05);border-left:3px solid var(--vermelho);font-size:12px;color:var(--cinza-700);border-radius:0 4px 4px 0">
-              <div style="font-size:10px;font-weight:700;color:var(--vermelho);margin-bottom:3px;text-transform:uppercase">Motivo da reprovação</div>
-              ${l.comentarioReprovacao}
-            </div>` : ''}
             <div class="historico-body">${linhas}</div>
           </div>`;
       }).join('');
