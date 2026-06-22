@@ -280,6 +280,19 @@
     .reprova-comment-label { font-weight: 700; color: var(--vermelho); margin-bottom: 4px; font-size: 11px; text-transform: uppercase; }
     .reprova-comment-texto { color: var(--cinza-700); }
 
+    /* ── Reprovação individual ── */
+    .btn-reprovar-colab {
+      background: none; border: 1px solid transparent; border-radius: 4px;
+      color: var(--cinza-400); cursor: pointer; font-size: 11px; font-weight: 600;
+      padding: 3px 8px; transition: all 0.15s; font-family: 'Inter', sans-serif;
+      white-space: nowrap;
+    }
+    .btn-reprovar-colab:hover { color: var(--vermelho); border-color: rgba(203,9,53,0.25); background: var(--verm-bg); }
+    .btn-reprovar-colab.reprovado-individual {
+      color: var(--vermelho); border-color: rgba(203,9,53,0.3); background: var(--verm-bg);
+    }
+    .td-status-colab { width: 110px; }
+
     /* ── Vazio ── */
     .state-vazio {
       background: var(--branco); border: 1px solid var(--cinza-200);
@@ -379,7 +392,7 @@
   <div class="modal-overlay" id="modalReprova">
     <div class="modal">
       <div class="modal-titulo">Reprovar lançamento</div>
-      <div class="modal-desc">Informe o motivo da reprovação. O operador será notificado para corrigir o lançamento.</div>
+      <div class="modal-desc" id="modal-desc-texto">Informe o motivo da reprovação. O operador será notificado para corrigir o lançamento.</div>
       <div class="modal-frente" id="modal-frente-nome">—</div>
       <div class="modal-label">Motivo da reprovação *</div>
       <textarea class="modal-textarea" id="modal-comentario" maxlength="300"
@@ -419,6 +432,7 @@
     let todosLancamentos = [];
     let lancamentosFiltrados = [];
     let lancamentoParaReprovar = null;
+    let colabParaReprovar = null; // índice do colaborador (null = reprovar lançamento inteiro)
 
     // ── Auth ──
     onAuthStateChanged(auth, async (user) => {
@@ -520,7 +534,7 @@
       const tardeConcluido = l.statusTarde === 'concluido';
 
       // Tabela colaboradores
-      const linhasColab = (l.colaboradores || []).map(c => {
+      const linhasColab = (l.colaboradores || []).map((c, idx) => {
         const nota = c.nota !== undefined ? c.nota : '—';
         let notaClass = '';
         if      (nota <= 3)  notaClass = 'nota-baixa';
@@ -528,12 +542,25 @@
         else if (nota <= 8)  notaClass = 'nota-boa';
         else                 notaClass = 'nota-otima';
 
-        return `<tr>
-          <td><div class="td-nome">${capitalizar(c.nome)}</div><div class="td-mat">${c.matricula}</div></td>
+        const reprovadoInd = c.reprovadoIndividual;
+        const statusColab = reprovadoInd
+          ? `<button class="btn-reprovar-colab reprovado-individual" title="${c.motivoReprovacaoIndividual||''}"
+               onclick="desfazerReprovacaoIndividual('${l.id}',${idx})" style="${status!=='pendente'?'pointer-events:none':''}">
+               ✕ Reprovado
+             </button>`
+          : (status === 'pendente'
+              ? `<button class="btn-reprovar-colab" onclick="abrirModalReprovaIndividual('${l.id}',${idx},'${c.nome.replace(/'/g,"\\'")}','${l.frenteNome.replace(/'/g,"\\'")}')">
+                   Reprovar
+                 </button>`
+              : '');
+
+        return `<tr ${reprovadoInd ? 'style="background:rgba(203,9,53,0.03)"' : ''}>
+          <td><div class="td-nome" style="${reprovadoInd?'text-decoration:line-through;opacity:0.6':''}">${capitalizar(c.nome)}</div><div class="td-mat">${c.matricula}</div></td>
           <td class="td-turno">${c.turno}h</td>
           <td>${nota !== '—' ? `<span class="nota-badge ${notaClass}">★ ${nota}</span>` : '<span style="color:var(--cinza-400);font-size:12px">Aguardando</span>'}</td>
           <td class="td-producao">${c.producaoQtd ? `${c.producaoQtd} ${c.producaoUnidade||''}` : '—'}</td>
           <td class="td-obs">${c.obs || ''}</td>
+          <td class="td-status-colab">${statusColab}</td>
         </tr>`;
       }).join('');
 
@@ -604,6 +631,7 @@
                 <th>Nota</th>
                 <th>Produção</th>
                 <th>Obs.</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>${linhasColab}</tbody>
@@ -638,10 +666,22 @@
       renderizarLista();
     };
 
-    // ── Modal reprovação ──
+    // ── Modal reprovação (lançamento inteiro ou colaborador individual) ──
     window.abrirModalReprova = function(id, frenteNome) {
       lancamentoParaReprovar = id;
+      colabParaReprovar = null;
+      document.getElementById('modal-desc-texto').textContent = 'Informe o motivo da reprovação. O operador será notificado para corrigir o lançamento.';
       document.getElementById('modal-frente-nome').textContent = frenteNome;
+      document.getElementById('modal-comentario').value = '';
+      document.getElementById('modal-count').textContent = '0';
+      document.getElementById('modalReprova').classList.add('aberto');
+    };
+
+    window.abrirModalReprovaIndividual = function(lancId, colabIdx, colabNome, frenteNome) {
+      lancamentoParaReprovar = lancId;
+      colabParaReprovar = colabIdx;
+      document.getElementById('modal-desc-texto').textContent = `Reprovar apenas "${colabNome}" mantendo os demais aprovados.`;
+      document.getElementById('modal-frente-nome').textContent = `${frenteNome} — ${colabNome}`;
       document.getElementById('modal-comentario').value = '';
       document.getElementById('modal-count').textContent = '0';
       document.getElementById('modalReprova').classList.add('aberto');
@@ -650,6 +690,7 @@
     window.fecharModal = function() {
       document.getElementById('modalReprova').classList.remove('aberto');
       lancamentoParaReprovar = null;
+      colabParaReprovar = null;
     };
 
     window.atualizarContador = function() {
@@ -668,14 +709,29 @@
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando…';
 
       try {
-        await updateDoc(doc(db, 'lancamentos_manha', lancamentoParaReprovar), {
-          statusAprovacao:      'reprovado',
-          comentarioReprovacao: comentario,
-          reprovadoEm:          serverTimestamp()
-        });
+        const lancRef = doc(db, 'lancamentos_manha', lancamentoParaReprovar);
 
-        const l = todosLancamentos.find(x => x.id === lancamentoParaReprovar);
-        if (l) { l.statusAprovacao = 'reprovado'; l.comentarioReprovacao = comentario; }
+        if (colabParaReprovar !== null) {
+          // Reprovação individual — atualiza só o colaborador no array
+          const l = todosLancamentos.find(x => x.id === lancamentoParaReprovar);
+          const colabs = [...(l.colaboradores || [])];
+          colabs[colabParaReprovar] = {
+            ...colabs[colabParaReprovar],
+            reprovadoIndividual: true,
+            motivoReprovacaoIndividual: comentario
+          };
+          await updateDoc(lancRef, { colaboradores: colabs });
+          l.colaboradores = colabs;
+        } else {
+          // Reprovação do lançamento inteiro
+          await updateDoc(lancRef, {
+            statusAprovacao:      'reprovado',
+            comentarioReprovacao: comentario,
+            reprovadoEm:          serverTimestamp()
+          });
+          const l = todosLancamentos.find(x => x.id === lancamentoParaReprovar);
+          if (l) { l.statusAprovacao = 'reprovado'; l.comentarioReprovacao = comentario; }
+        }
 
         fecharModal();
         atualizarContadores();
@@ -685,6 +741,16 @@
       } finally {
         btn.disabled = false; btn.innerHTML = 'Reprovar';
       }
+    };
+
+    window.desfazerReprovacaoIndividual = async function(lancId, colabIdx) {
+      const l = todosLancamentos.find(x => x.id === lancId);
+      if (!l) return;
+      const colabs = [...(l.colaboradores || [])];
+      colabs[colabIdx] = { ...colabs[colabIdx], reprovadoIndividual: false, motivoReprovacaoIndividual: '' };
+      await updateDoc(doc(db, 'lancamentos_manha', lancId), { colaboradores: colabs });
+      l.colaboradores = colabs;
+      renderizarLista();
     };
 
     // Fecha modal ao clicar fora

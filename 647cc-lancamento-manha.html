@@ -226,6 +226,13 @@
       flex-shrink: 0;
     }
 
+    .colab-item.ocupado {
+      opacity: 0.55;
+      cursor: not-allowed;
+      background: var(--cinza-100);
+    }
+    .colab-item.ocupado:hover { background: var(--cinza-100); }
+
     .lista-vazia-msg {
       text-align: center;
       padding: 28px;
@@ -629,6 +636,7 @@
     let selecionados       = {};   // { id: { ...dadosColab, turno: '8.8' | '4.4' } }
     let usuarioAtual       = null;
     let frentesMap         = {};
+    let colaboradoresOcupados = new Set(); // IDs já apropriados hoje
 
     // ── Clock ──
     function atualizarRelogio() {
@@ -651,9 +659,28 @@
       document.getElementById('barOperador').textContent = capitalizar(usuarioAtual.nome);
 
       await carregarFrentes();
+      await carregarColaboradoresOcupados();
       await carregarColaboradores();
       await carregarHistoricoDia();
     });
+
+    // ── Colaboradores ocupados hoje ──
+    async function carregarColaboradoresOcupados() {
+      const dataStr = new Date().toISOString().split('T')[0];
+      // Busca todos os lançamentos de hoje (qualquer operador, qualquer status que não seja reprovado)
+      const snap = await getDocs(query(
+        collection(db, 'lancamentos_manha'),
+        where('dataStr', '==', dataStr)
+      ));
+      colaboradoresOcupados = new Set();
+      snap.docs.forEach(d => {
+        const l = d.data();
+        // Só bloqueia se o lançamento não foi reprovado
+        if (l.statusAprovacao !== 'reprovado') {
+          (l.colaboradores || []).forEach(c => colaboradoresOcupados.add(c.id));
+        }
+      });
+    }
 
     // ── Frentes ──
     async function carregarFrentes() {
@@ -687,16 +714,19 @@
         return;
       }
 
-      cont.innerHTML = lista.map(c => `
-        <div class="colab-item ${selecionados[c.id] ? 'selecionado' : ''}"
-             onclick="toggleColab('${c.id}')" id="colab-item-${c.id}">
-          <div class="colab-check">${selecionados[c.id] ? '✓' : ''}</div>
+      cont.innerHTML = lista.map(c => {
+        const ocupado = colaboradoresOcupados.has(c.id) && !selecionados[c.id];
+        return `
+        <div class="colab-item ${selecionados[c.id] ? 'selecionado' : ''} ${ocupado ? 'ocupado' : ''}"
+             onclick="${ocupado ? '' : `toggleColab('${c.id}')`}" id="colab-item-${c.id}">
+          <div class="colab-check">${selecionados[c.id] ? '✓' : (ocupado ? '—' : '')}</div>
           <div class="colab-info">
             <div class="colab-nome">${c.nome}</div>
-            <div class="colab-detalhe">Mat: ${c.matricula} · ${c.encarregado}</div>
+            <div class="colab-detalhe">Mat: ${c.matricula} · ${c.encarregado}${ocupado ? ' · <span style="color:var(--vermelho)">já apropriado hoje</span>' : ''}</div>
           </div>
-          <span class="colab-funcao-badge">${c.funcao}</span>
-        </div>`).join('');
+          <span class="colab-funcao-badge" style="${ocupado ? 'opacity:0.45' : ''}">${c.funcao}</span>
+        </div>`;
+      }).join('');
     }
 
     window.filtrarColaboradores = function(termo) {

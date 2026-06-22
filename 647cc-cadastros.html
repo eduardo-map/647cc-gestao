@@ -287,6 +287,55 @@
 
     .painel { display: none; }
     .painel.ativo { display: block; }
+
+    .btn-excluir {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 5px;
+      color: var(--cinza-400);
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px 8px;
+      transition: all 0.15s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .btn-excluir:hover {
+      color: var(--vermelho);
+      border-color: rgba(203,9,53,0.2);
+      background: rgba(203,9,53,0.06);
+    }
+
+    /* Modal confirmação exclusão */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 1000;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.aberto { display: flex; }
+    .modal {
+      background: var(--branco); border-radius: 12px;
+      padding: 28px; max-width: 420px; width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .modal-titulo { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--vermelho); }
+    .modal-desc   { font-size: 13px; color: var(--cinza-700); margin-bottom: 6px; line-height: 1.5; }
+    .modal-alvo   { font-size: 13px; font-weight: 700; color: var(--cinza-900); margin-bottom: 20px;
+                    background: var(--cinza-100); border-radius: 6px; padding: 10px 14px; border: 1px solid var(--cinza-200); }
+    .modal-acoes  { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-cancelar-modal {
+      background: transparent; border: 1px solid var(--cinza-200); border-radius: 6px;
+      padding: 9px 18px; font-size: 13px; font-weight: 600; color: var(--cinza-700);
+      cursor: pointer; font-family: 'Inter', sans-serif;
+    }
+    .btn-cancelar-modal:hover { border-color: var(--cinza-400); }
+    .btn-confirmar-excluir {
+      background: var(--vermelho); color: var(--branco); border: none;
+      border-radius: 6px; padding: 9px 18px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.15s;
+    }
+    .btn-confirmar-excluir:hover { background: #a8072b; }
+    .btn-confirmar-excluir:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -471,11 +520,25 @@
     </div><!-- /card -->
   </div><!-- /container -->
 
+  <!-- Modal confirmação exclusão -->
+  <div class="modal-overlay" id="modalExcluir">
+    <div class="modal">
+      <div class="modal-titulo">⚠️ Confirmar exclusão</div>
+      <div class="modal-desc">Você está prestes a excluir permanentemente:</div>
+      <div class="modal-alvo" id="modal-alvo-nome">—</div>
+      <div class="modal-desc" style="color:var(--vermelho);font-size:12px">Esta ação não pode ser desfeita.</div>
+      <div class="modal-acoes" style="margin-top:20px">
+        <button class="btn-cancelar-modal" onclick="fecharModalExcluir()">Cancelar</button>
+        <button class="btn-confirmar-excluir" id="btn-confirmar-excluir" onclick="executarExclusao()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut }
                                 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, serverTimestamp, query, orderBy }
+    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy }
                                 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -493,6 +556,34 @@
 
     let adminEmail = '';
     let adminSenha = '';
+
+    // ── Exclusão ──
+    let excluirCallback = null;
+
+    window.abrirModalExcluir = function(nome, callback) {
+      document.getElementById('modal-alvo-nome').textContent = nome;
+      excluirCallback = callback;
+      document.getElementById('modalExcluir').classList.add('aberto');
+    };
+
+    window.fecharModalExcluir = function() {
+      document.getElementById('modalExcluir').classList.remove('aberto');
+      excluirCallback = null;
+    };
+
+    window.executarExclusao = async function() {
+      if (!excluirCallback) return;
+      const btn = document.getElementById('btn-confirmar-excluir');
+      btn.disabled = true; btn.textContent = 'Excluindo…';
+      try { await excluirCallback(); } finally {
+        btn.disabled = false; btn.textContent = 'Excluir';
+        fecharModalExcluir();
+      }
+    };
+
+    document.getElementById('modalExcluir').addEventListener('click', function(e) {
+      if (e.target === this) fecharModalExcluir();
+    });
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) { window.location.href = '647cc-login.html'; return; }
@@ -539,16 +630,25 @@
       if (snap.empty) { lista.innerHTML = '<div class="lista-vazia">Nenhum usuário cadastrado ainda.</div>'; return; }
       const cores = { administrador: 'badge-verm', engenheiro: 'badge-azul', operador: 'badge-verde' };
       lista.innerHTML = snap.docs.map(d => {
-        const u = d.data();
+        const u = d.data(); const uid = d.id;
         return `<div class="item-lista">
           <div class="item-info">
             <div class="item-nome">${capitalizar(u.nome)}</div>
             <div class="item-detalhe">DE: ${u.matricula} · ${u.email}</div>
           </div>
           <span class="item-badge ${cores[u.perfil]||'badge-azul'}">${u.perfil}</span>
+          <button class="btn-excluir" title="Excluir" onclick="confirmarExcluirUsuario('${uid}','${u.nome.replace(/'/g,"\\'")}')">🗑</button>
         </div>`;
       }).join('');
     }
+
+    window.confirmarExcluirUsuario = function(uid, nome) {
+      abrirModalExcluir(nome, async () => {
+        await deleteDoc(doc(db, 'usuarios', uid));
+        showMsg('msg-usuario', `✓ Usuário "${nome}" excluído.`, 'sucesso');
+        carregarUsuarios();
+      });
+    };
 
     window.salvarMOD = async function () {
       const matricula   = document.getElementById('m-matricula').value.trim();
@@ -579,7 +679,7 @@
       document.getElementById('count-mod').textContent = snap.size;
       if (snap.empty) { lista.innerHTML = '<div class="lista-vazia">Nenhum colaborador cadastrado ainda.</div>'; return; }
       lista.innerHTML = snap.docs.map(d => {
-        const m = d.data();
+        const m = d.data(); const cid = d.id;
         const hora = m.custoHora ? `R$ ${m.custoHora.toFixed(2)}/h` : '—';
         return `<div class="item-lista">
           <div class="item-info">
@@ -587,9 +687,18 @@
             <div class="item-detalhe">Mat: ${m.matricula} · ${m.funcao} · ${m.encarregado}</div>
           </div>
           <span class="item-badge badge-verde">${hora}</span>
+          <button class="btn-excluir" title="Excluir" onclick="confirmarExcluirMOD('${cid}','${m.nome.replace(/'/g,"\\'")}')">🗑</button>
         </div>`;
       }).join('');
     }
+
+    window.confirmarExcluirMOD = function(cid, nome) {
+      abrirModalExcluir(nome, async () => {
+        await deleteDoc(doc(db, 'colaboradores', cid));
+        showMsg('msg-mod', `✓ Colaborador "${nome}" excluído.`, 'sucesso');
+        carregarMOD();
+      });
+    };
 
     window.salvarFrente = async function () {
       const nome      = document.getElementById('f-nome').value.trim();
@@ -618,7 +727,7 @@
       document.getElementById('count-frentes').textContent = snap.size;
       if (snap.empty) { lista.innerHTML = '<div class="lista-vazia">Nenhuma frente cadastrada ainda.</div>'; return; }
       lista.innerHTML = snap.docs.map(d => {
-        const f = d.data();
+        const f = d.data(); const fid = d.id;
         const orcado = f.orcado ? `R$ ${f.orcado.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
         return `<div class="item-lista">
           <div class="item-info">
@@ -626,9 +735,18 @@
             <div class="item-detalhe">${f.codigo ? f.codigo + ' · ' : ''}${f.descricao || 'Sem descrição'}</div>
           </div>
           <span class="item-badge badge-azul">${orcado}</span>
+          <button class="btn-excluir" title="Excluir" onclick="confirmarExcluirFrente('${fid}','${f.nome.replace(/'/g,"\\'")}')">🗑</button>
         </div>`;
       }).join('');
     }
+
+    window.confirmarExcluirFrente = function(fid, nome) {
+      abrirModalExcluir(nome, async () => {
+        await deleteDoc(doc(db, 'frentes', fid));
+        showMsg('msg-frente', `✓ Frente "${nome}" excluída.`, 'sucesso');
+        carregarFrentes();
+      });
+    };
 
     function carregarListas() { carregarUsuarios(); carregarMOD(); carregarFrentes(); }
 
