@@ -841,7 +841,12 @@
       await carregarColaboradoresOcupados();
       await carregarColaboradores();
       await carregarHistoricoDia();
-      await atualizarBadgeReprovados();
+      const qtdRep = await atualizarBadgeReprovados();
+      if (qtdRep > 0) {
+        // Abre automaticamente a aba de reprovados para chamar atenção
+        const abaBtn = document.getElementById('aba-reprovados');
+        trocarAbaLanc('reprovados', abaBtn);
+      }
     });
 
     // ── Colaboradores ocupados hoje ──
@@ -1244,7 +1249,7 @@
 
     // Atualiza badge ao carregar a página
     async function atualizarBadgeReprovados() {
-      if (!usuarioAtual) return;
+      if (!usuarioAtual) return 0;
       try {
         const snapRep = await getDocs(query(
           collection(db, 'lancamentos_manha'),
@@ -1269,7 +1274,8 @@
           badge.style.display = 'inline-flex';
           abaBtn.classList.add('alerta-aba');
         }
-      } catch(e) { /* silencioso */ }
+        return total;
+      } catch(e) { return 0; }
     }
 
     // ── Histórico do dia ──
@@ -1292,15 +1298,29 @@
 
       area.innerHTML = snap.docs.map(d => {
         const l = d.data();
-        const linhas = l.colaboradores.map(c => `
-          <div class="hist-linha">
-            <span class="hist-nome">${c.nome}${c.obs ? `<span style="font-size:10px;color:var(--cinza-400);font-weight:400;margin-left:6px">${c.obs}</span>` : ''}</span>
+        const st = l.statusAprovacao || 'pendente';
+        // Verifica se tem reprovações individuais
+        const temRepInd = (l.colaboradores||[]).some(c => c.reprovadoIndividual);
+        const stEfetivo = temRepInd && st !== 'reprovado' ? 'reprovado' : st;
+        const stLabel   = temRepInd && st !== 'reprovado' ? 'Parcial reprovado' : statusLabel[st];
+
+        const linhas = l.colaboradores.map(c => {
+          const repInd = c.reprovadoIndividual;
+          return `
+          <div class="hist-linha" style="${repInd ? 'opacity:0.6' : ''}">
+            <span class="hist-nome" style="${repInd ? 'text-decoration:line-through' : ''}">
+              ${c.nome}${c.obs ? `<span style="font-size:10px;color:var(--cinza-400);font-weight:400;margin-left:6px">${c.obs}</span>` : ''}
+              ${repInd ? `<span style="font-size:10px;color:var(--vermelho);margin-left:6px">✕ reprovado</span>` : ''}
+            </span>
             <span class="hist-mat">${c.matricula}</span>
             <span class="hist-turno">${c.turno}h</span>
-          </div>`).join('');
+          </div>`;
+        }).join('');
+
+        const bordaCard = stEfetivo === 'reprovado' ? 'border-color:rgba(203,9,53,0.35)' : '';
 
         return `
-          <div class="historico-card" style="margin-bottom:16px">
+          <div class="historico-card" style="margin-bottom:16px;${bordaCard}">
             <div class="historico-header">
               <div>
                 <span class="historico-titulo">${l.frenteNome}</span>
@@ -1309,8 +1329,13 @@
                   R$ ${l.custoTotalLancado?.toLocaleString('pt-BR',{minimumFractionDigits:2})}
                 </div>
               </div>
-              <span class="status-badge ${statusClass[l.status]}">${statusLabel[l.status]}</span>
+              <span class="status-badge ${statusClass[stEfetivo]}">${stLabel}</span>
             </div>
+            ${stEfetivo === 'reprovado' && l.comentarioReprovacao ? `
+            <div style="margin:0 16px 8px;padding:10px 14px;background:rgba(203,9,53,0.05);border-left:3px solid var(--vermelho);font-size:12px;color:var(--cinza-700);border-radius:0 4px 4px 0">
+              <div style="font-size:10px;font-weight:700;color:var(--vermelho);margin-bottom:3px;text-transform:uppercase">Motivo da reprovação</div>
+              ${l.comentarioReprovacao}
+            </div>` : ''}
             <div class="historico-body">${linhas}</div>
           </div>`;
       }).join('');
