@@ -258,6 +258,40 @@
       font-family: 'Inter', sans-serif;
     }
     .btn-sair:hover { color: var(--vermelho); border-color: var(--vermelho); }
+
+    /* ── Badge de alerta ── */
+    .btn-acao-wrapper { position: relative; }
+
+    .badge-alerta {
+      position: absolute;
+      top: -7px; right: -7px;
+      background: var(--vermelho);
+      color: var(--branco);
+      border-radius: 20px;
+      min-width: 22px; height: 22px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 6px;
+      box-shadow: 0 2px 6px rgba(203,9,53,0.4);
+      animation: pulsar 2s ease-in-out infinite;
+    }
+
+    @keyframes pulsar {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.12); }
+    }
+
+    .btn-acao.reprovados-alert {
+      border-color: rgba(203,9,53,0.35);
+      background: rgba(203,9,53,0.04);
+    }
+    .btn-acao.reprovados-alert:hover {
+      border-color: var(--vermelho);
+      background: rgba(203,9,53,0.08);
+    }
+    .btn-acao.reprovados-alert .icone { filter: none; }
   </style>
 </head>
 <body>
@@ -302,7 +336,7 @@
     import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
                                      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc }
+    import { getFirestore, doc, getDoc, collection, getDocs, query, where }
                                      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -374,7 +408,7 @@
 
     window.sair = async function () { await signOut(auth); };
 
-    function mostrarDashboard(dados) {
+    async function mostrarDashboard(dados) {
       document.getElementById('telaLogin').style.display     = 'none';
       document.getElementById('telaDashboard').style.display = 'block';
       document.getElementById('dashNome').textContent        = capitalizar(dados.nome   || '—');
@@ -382,11 +416,48 @@
 
       const perfil = (dados.perfil || 'operador').toLowerCase();
       const acoes  = MENUS[perfil] || MENUS.operador;
-      document.getElementById('dashAcoes').innerHTML = acoes.map(a => `
-        <button class="btn-acao" onclick="location.href='${a.pagina}'">
-          <span class="icone">${a.icone}</span>
-          <span><div>${a.titulo}</div><div class="desc">${a.desc}</div></span>
-        </button>`).join('');
+
+      // Busca reprovados apenas para operadores e administradores
+      let qtdReprovados = 0;
+      if (perfil === 'operador' || perfil === 'administrador') {
+        try {
+          const user = auth.currentUser;
+          const hoje = new Date().toISOString().split('T')[0];
+          // Lançamentos reprovados inteiramente
+          const snapRep = await getDocs(query(
+            collection(db, 'lancamentos_manha'),
+            where('operadorUid', '==', user.uid),
+            where('statusAprovacao', '==', 'reprovado')
+          ));
+          // Lançamentos com colaboradores reprovados individualmente (qualquer status)
+          const snapInd = await getDocs(query(
+            collection(db, 'lancamentos_manha'),
+            where('operadorUid', '==', user.uid)
+          ));
+          let repIndividuais = 0;
+          snapInd.docs.forEach(d => {
+            const l = d.data();
+            if (l.statusAprovacao === 'reprovado') return; // já contado acima
+            (l.colaboradores || []).forEach(c => {
+              if (c.reprovadoIndividual) repIndividuais++;
+            });
+          });
+          qtdReprovados = snapRep.size + repIndividuais;
+        } catch(e) { /* silencioso */ }
+      }
+
+      document.getElementById('dashAcoes').innerHTML = acoes.map(a => {
+        const isLancamento = a.pagina.includes('lancamento-manha');
+        const temAlerta = isLancamento && qtdReprovados > 0;
+        return `
+        <div class="btn-acao-wrapper">
+          <button class="btn-acao ${temAlerta ? 'reprovados-alert' : ''}" onclick="location.href='${a.pagina}'">
+            <span class="icone">${a.icone}</span>
+            <span><div>${a.titulo}</div><div class="desc">${temAlerta ? `⚠️ ${qtdReprovados} reprovado${qtdReprovados>1?'s':''} pendente${qtdReprovados>1?'s':''}` : a.desc}</div></span>
+          </button>
+          ${temAlerta ? `<span class="badge-alerta">${qtdReprovados}</span>` : ''}
+        </div>`;
+      }).join('');
     }
 
     function mostrarLogin() {

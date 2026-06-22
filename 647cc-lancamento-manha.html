@@ -391,6 +391,151 @@
       vertical-align: middle; margin-right: 6px;
     }
 
+    /* ── Abas de navegação principal ── */
+    .nav-abas {
+      display: flex;
+      gap: 0;
+      background: var(--branco);
+      border: 1px solid var(--cinza-200);
+      border-radius: 8px;
+      padding: 4px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      position: relative;
+    }
+
+    .nav-aba {
+      flex: 1;
+      padding: 10px 8px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--cinza-400);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      position: relative;
+    }
+
+    .nav-aba.ativa {
+      background: var(--azul);
+      color: var(--branco);
+      font-weight: 700;
+    }
+
+    .nav-aba.alerta-aba {
+      color: var(--vermelho);
+    }
+    .nav-aba.alerta-aba.ativa {
+      background: var(--vermelho);
+      color: var(--branco);
+    }
+
+    .nav-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--vermelho);
+      color: var(--branco);
+      border-radius: 20px;
+      min-width: 18px; height: 18px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 0 5px;
+      margin-left: 6px;
+      vertical-align: middle;
+      animation: pulsar 2s ease-in-out infinite;
+    }
+    .nav-aba.ativa .nav-badge {
+      background: rgba(255,255,255,0.3);
+      animation: none;
+    }
+
+    @keyframes pulsar {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.15); }
+    }
+
+    /* ── Card de reprovado ── */
+    .rep-card {
+      background: var(--branco);
+      border: 1px solid rgba(203,9,53,0.25);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      margin-bottom: 16px;
+    }
+
+    .rep-card-header {
+      padding: 14px 20px;
+      background: rgba(203,9,53,0.04);
+      border-bottom: 1px solid rgba(203,9,53,0.15);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .rep-frente { font-size: 14px; font-weight: 700; color: var(--cinza-900); }
+    .rep-meta   { font-size: 11px; color: var(--cinza-400); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+    .rep-tipo-badge {
+      font-size: 10px; font-weight: 700;
+      background: rgba(203,9,53,0.1); color: var(--vermelho);
+      border: 1px solid rgba(203,9,53,0.25);
+      border-radius: 4px; padding: 3px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    .rep-motivo {
+      margin: 0 20px 0;
+      padding: 12px 14px;
+      background: rgba(203,9,53,0.05);
+      border-left: 3px solid var(--vermelho);
+      font-size: 12px;
+      color: var(--cinza-700);
+      line-height: 1.6;
+    }
+    .rep-motivo-label {
+      font-size: 10px; font-weight: 700;
+      color: var(--vermelho); text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+
+    .rep-colaboradores {
+      padding: 12px 20px 16px;
+    }
+
+    .rep-colab-linha {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--cinza-200);
+      font-size: 13px;
+    }
+    .rep-colab-linha:last-child { border-bottom: none; }
+    .rep-colab-nome { font-weight: 600; flex: 1; }
+    .rep-colab-mat  { font-size: 11px; color: var(--cinza-400); font-family: 'JetBrains Mono', monospace; }
+    .rep-colab-turno { font-size: 11px; font-weight: 700; color: var(--azul); font-family: 'JetBrains Mono', monospace; }
+    .rep-colab-verm { color: var(--vermelho); }
+
+    .rep-motivo-ind {
+      font-size: 10px; color: var(--vermelho);
+      font-style: italic; margin-top: 2px;
+    }
+
+    .rep-vazio {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--cinza-400);
+    }
+    .rep-vazio-icon  { font-size: 36px; margin-bottom: 12px; }
+    .rep-vazio-texto { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--cinza-700); }
+    .rep-vazio-desc  { font-size: 13px; }
+
     /* ── Sucesso state ── */
     .sucesso-state {
       display: none;
@@ -533,6 +678,17 @@
       </div>
     </div>
 
+    <!-- Abas de navegação -->
+    <div class="nav-abas">
+      <button class="nav-aba ativa" id="aba-lancar" onclick="trocarAbaLanc('lancar', this)">
+        🌅 Novo lançamento
+      </button>
+      <button class="nav-aba alerta-aba" id="aba-reprovados" onclick="trocarAbaLanc('reprovados', this)">
+        ⚠️ Reprovados
+        <span class="nav-badge" id="badge-reprovados" style="display:none">0</span>
+      </button>
+    </div>
+
     <!-- Formulário principal -->
     <div id="formArea">
 
@@ -626,6 +782,11 @@
     <!-- Histórico do dia -->
     <div id="historicoArea" style="margin-top: 24px;"></div>
 
+    <!-- Aba Reprovados -->
+    <div id="reprovadosArea" style="display:none; margin-top: 8px;">
+      <div id="listaReprovados"></div>
+    </div>
+
   </div><!-- /container -->
 
   <script type="module">
@@ -680,6 +841,7 @@
       await carregarColaboradoresOcupados();
       await carregarColaboradores();
       await carregarHistoricoDia();
+      await atualizarBadgeReprovados();
     });
 
     // ── Colaboradores ocupados hoje ──
@@ -957,6 +1119,158 @@
       const btn = document.getElementById('btn-confirmar');
       btn.disabled = false; btn.innerHTML = 'Confirmar lançamento';
     };
+
+    // ── Troca de aba ──
+    window.trocarAbaLanc = function(aba, btn) {
+      const isLancar = aba === 'lancar';
+      document.getElementById('formArea').style.display       = isLancar ? 'block' : 'none';
+      document.getElementById('sucessoArea').style.display    = 'none';
+      document.getElementById('historicoArea').style.display  = isLancar ? 'block' : 'none';
+      document.getElementById('reprovadosArea').style.display = isLancar ? 'none' : 'block';
+
+      document.querySelectorAll('.nav-aba').forEach(b => b.classList.remove('ativa'));
+      btn.classList.add('ativa');
+
+      if (!isLancar) carregarReprovados();
+    };
+
+    // ── Reprovados ──
+    async function carregarReprovados() {
+      const area = document.getElementById('listaReprovados');
+      area.innerHTML = '<div class="rep-vazio"><div class="rep-vazio-icon">⏳</div><div class="rep-vazio-texto">Carregando…</div></div>';
+
+      try {
+        const uid = usuarioAtual?.uid;
+        if (!uid) return;
+
+        // Lançamentos inteiramente reprovados
+        const snapRep = await getDocs(query(
+          collection(db, 'lancamentos_manha'),
+          where('operadorUid', '==', uid),
+          where('statusAprovacao', '==', 'reprovado')
+        ));
+
+        // Lançamentos com reprovações individuais
+        const snapTodos = await getDocs(query(
+          collection(db, 'lancamentos_manha'),
+          where('operadorUid', '==', uid)
+        ));
+
+        // Monta lista de itens para exibir
+        let itens = [];
+
+        snapRep.docs.forEach(d => {
+          itens.push({ id: d.id, ...d.data(), tipoReprova: 'lancamento' });
+        });
+
+        snapTodos.docs.forEach(d => {
+          const l = d.data();
+          if (l.statusAprovacao === 'reprovado') return; // já incluído
+          const temIndividual = (l.colaboradores || []).some(c => c.reprovadoIndividual);
+          if (temIndividual) itens.push({ id: d.id, ...l, tipoReprova: 'individual' });
+        });
+
+        // Atualiza badge
+        const badge = document.getElementById('badge-reprovados');
+        const abaBtn = document.getElementById('aba-reprovados');
+        if (itens.length > 0) {
+          badge.textContent = itens.length;
+          badge.style.display = 'inline-flex';
+          abaBtn.classList.add('alerta-aba');
+        } else {
+          badge.style.display = 'none';
+          abaBtn.classList.remove('alerta-aba');
+        }
+
+        if (itens.length === 0) {
+          area.innerHTML = `
+            <div class="rep-vazio">
+              <div class="rep-vazio-icon">✅</div>
+              <div class="rep-vazio-texto">Nenhum lançamento reprovado</div>
+              <div class="rep-vazio-desc">Todos os seus lançamentos foram aprovados ou estão pendentes.</div>
+            </div>`;
+          return;
+        }
+
+        // Ordena mais recentes primeiro
+        itens.sort((a,b) => (b.criadoEm?.seconds||0) - (a.criadoEm?.seconds||0));
+
+        area.innerHTML = itens.map(l => {
+          const dataFmt = l.dataStr
+            ? new Date(l.dataStr + 'T12:00:00').toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'2-digit'})
+            : '—';
+          const tipoLabel = l.tipoReprova === 'lancamento' ? 'Reprovado inteiro' : 'Reprovação parcial';
+
+          // Colaboradores: destacar os reprovados individualmente ou todos se for reprovação total
+          const colabsHtml = (l.colaboradores || []).map(c => {
+            const isRepInd = l.tipoReprova === 'individual' && c.reprovadoIndividual;
+            const isRepTot = l.tipoReprova === 'lancamento';
+            if (!isRepInd && !isRepTot) return ''; // na reprovação individual, pula os ok
+            return `
+              <div class="rep-colab-linha">
+                <div>
+                  <div class="rep-colab-nome ${isRepInd || isRepTot ? 'rep-colab-verm' : ''}">${c.nome}</div>
+                  ${isRepInd && c.motivoReprovacaoIndividual ? `<div class="rep-motivo-ind">↳ ${c.motivoReprovacaoIndividual}</div>` : ''}
+                </div>
+                <span class="rep-colab-mat">${c.matricula}</span>
+                <span class="rep-colab-turno">${c.turno}h</span>
+              </div>`;
+          }).join('');
+
+          const motivoHtml = (l.tipoReprova === 'lancamento' && l.comentarioReprovacao) ? `
+            <div class="rep-motivo" style="margin-bottom:0">
+              <div class="rep-motivo-label">Motivo</div>
+              ${l.comentarioReprovacao}
+            </div>` : '';
+
+          return `
+            <div class="rep-card">
+              <div class="rep-card-header">
+                <div>
+                  <div class="rep-frente">${l.frenteNome}</div>
+                  <div class="rep-meta">📅 ${dataFmt} · 👥 ${l.totalColaboradores} colaboradores</div>
+                </div>
+                <span class="rep-tipo-badge">${tipoLabel}</span>
+              </div>
+              ${motivoHtml}
+              <div class="rep-colaboradores">${colabsHtml}</div>
+            </div>`;
+        }).join('');
+
+      } catch(e) {
+        area.innerHTML = `<div class="rep-vazio"><div class="rep-vazio-icon">⚠️</div><div class="rep-vazio-texto">Erro ao carregar: ${e.message}</div></div>`;
+      }
+    }
+
+    // Atualiza badge ao carregar a página
+    async function atualizarBadgeReprovados() {
+      if (!usuarioAtual) return;
+      try {
+        const snapRep = await getDocs(query(
+          collection(db, 'lancamentos_manha'),
+          where('operadorUid', '==', usuarioAtual.uid),
+          where('statusAprovacao', '==', 'reprovado')
+        ));
+        const snapTodos = await getDocs(query(
+          collection(db, 'lancamentos_manha'),
+          where('operadorUid', '==', usuarioAtual.uid)
+        ));
+        let repInd = 0;
+        snapTodos.docs.forEach(d => {
+          const l = d.data();
+          if (l.statusAprovacao === 'reprovado') return;
+          (l.colaboradores || []).forEach(c => { if (c.reprovadoIndividual) repInd++; });
+        });
+        const total = snapRep.size + repInd;
+        const badge = document.getElementById('badge-reprovados');
+        const abaBtn = document.getElementById('aba-reprovados');
+        if (total > 0) {
+          badge.textContent = total;
+          badge.style.display = 'inline-flex';
+          abaBtn.classList.add('alerta-aba');
+        }
+      } catch(e) { /* silencioso */ }
+    }
 
     // ── Histórico do dia ──
     async function carregarHistoricoDia() {
