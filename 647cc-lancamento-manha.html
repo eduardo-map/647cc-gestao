@@ -897,6 +897,7 @@
     let colaboradoresTodos = [];
     let selecionados       = {};   // { id: { ...dadosColab, turno: '8.8' | '4.4' } }
     let usuarioAtual       = null;
+    let obraAtiva          = sessionStorage.getItem('obraAtiva') || '';
     let frentesMap         = {};
     let colaboradoresOcupados = new Set(); // IDs já apropriados hoje
 
@@ -914,6 +915,7 @@
     // ── Auth ──
     onAuthStateChanged(auth, async (user) => {
       if (!user) { window.location.href = '647cc-login.html'; return; }
+      if (!obraAtiva) { window.location.href = '647cc-login.html'; return; }
 
       const snap  = await getDoc(doc(db, 'usuarios', user.uid));
       usuarioAtual = snap.exists() ? { uid: user.uid, ...snap.data() } : { uid: user.uid, nome: user.email, perfil: 'operador' };
@@ -935,6 +937,7 @@
       const dataStr = new Date().toISOString().split('T')[0];
       const snap = await getDocs(query(
         collection(db, 'lancamentos_manha'),
+        where('obraId',  '==', obraAtiva),
         where('dataStr', '==', dataStr)
       ));
       horasLancadasHoje = {};
@@ -960,7 +963,7 @@
 
     // ── Frentes ──
     async function carregarFrentes() {
-      const snap = await getDocs(query(collection(db, 'frentes'), where('ativa', '==', true)));
+      const snap = await getDocs(query(collection(db, 'frentes'), where('obraId', '==', obraAtiva), where('ativa', '==', true)));
       const sel  = document.getElementById('select-frente');
       sel.innerHTML = '<option value="">— Selecione a frente —</option>';
 
@@ -978,7 +981,7 @@
 
     // ── Colaboradores ──
     async function carregarColaboradores() {
-      const snap = await getDocs(query(collection(db, 'colaboradores'), where('ativo', '==', true)));
+      const snap = await getDocs(query(collection(db, 'colaboradores'), where('obraId', '==', obraAtiva), where('ativo', '==', true)));
       colaboradoresTodos = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR'));
       renderizarLista(colaboradoresTodos);
     }
@@ -1145,6 +1148,7 @@
         const totalHoras        = colaboradoresData.reduce((s, c) => s + c.turno, 0);
 
         await addDoc(collection(db, 'lancamentos_manha'), {
+          obraId:         obraAtiva,
           operadorUid:    usuarioAtual.uid,
           operadorNome:   usuarioAtual.nome,
           operadorMat:    usuarioAtual.matricula || '',
@@ -1229,13 +1233,15 @@
         // Lançamentos inteiramente reprovados
         const snapRep = await getDocs(query(
           collection(db, 'lancamentos_manha'),
-          where('operadorUid', '==', uid),
+          where('obraId',          '==', obraAtiva),
+          where('operadorUid',     '==', uid),
           where('statusAprovacao', '==', 'reprovado')
         ));
 
         // Lançamentos com reprovações individuais
         const snapTodos = await getDocs(query(
           collection(db, 'lancamentos_manha'),
+          where('obraId',      '==', obraAtiva),
           where('operadorUid', '==', uid)
         ));
 
@@ -1449,11 +1455,13 @@
       try {
         const snapRep = await getDocs(query(
           collection(db, 'lancamentos_manha'),
-          where('operadorUid', '==', usuarioAtual.uid),
+          where('obraId',          '==', obraAtiva),
+          where('operadorUid',     '==', usuarioAtual.uid),
           where('statusAprovacao', '==', 'reprovado')
         ));
         const snapTodos = await getDocs(query(
           collection(db, 'lancamentos_manha'),
+          where('obraId',      '==', obraAtiva),
           where('operadorUid', '==', usuarioAtual.uid)
         ));
         let repInd = 0;
@@ -1478,6 +1486,7 @@
       const dataStr = new Date().toISOString().split('T')[0];
       const q = query(
         collection(db, 'lancamentos_manha'),
+        where('obraId',      '==', obraAtiva),
         where('operadorUid', '==', usuarioAtual?.uid),
         where('dataStr',     '==', dataStr)
       );

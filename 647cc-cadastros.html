@@ -31,7 +31,6 @@
       min-height: 100vh;
     }
 
-    /* ── Topbar ── */
     .topbar {
       background: var(--azul);
       padding: 0 32px;
@@ -46,21 +45,20 @@
     }
 
     .topbar-esq { display: flex; align-items: center; gap: 16px; }
-
-    .topbar-logo {
-      font-size: 11px;
-      font-weight: 700;
-      color: rgba(255,255,255,0.6);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
+    .topbar-logo { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
     .topbar-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+    .topbar-titulo { font-size: 15px; font-weight: 600; color: var(--branco); }
 
-    .topbar-titulo {
-      font-size: 15px;
-      font-weight: 600;
+    .topbar-obra-badge {
+      background: rgba(203,9,53,0.7);
       color: var(--branco);
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
     }
 
     .btn-voltar {
@@ -76,10 +74,8 @@
     }
     .btn-voltar:hover { background: rgba(255,255,255,0.2); }
 
-    /* ── Layout ── */
     .container { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
 
-    /* ── Abas ── */
     .abas {
       display: flex;
       gap: 0;
@@ -107,13 +103,8 @@
       line-height: 1.4;
     }
 
-    .aba.ativa {
-      background: var(--azul);
-      color: var(--branco);
-      font-weight: 700;
-    }
+    .aba.ativa { background: var(--azul); color: var(--branco); font-weight: 700; }
 
-    /* ── Card ── */
     .card {
       background: var(--branco);
       border: 1px solid var(--cinza-200);
@@ -133,7 +124,6 @@
 
     .card-body { padding: 28px; }
 
-    /* ── Formulário ── */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
@@ -185,9 +175,44 @@
     }
     .prefixo-wrap input { padding-left: 28px; }
 
+    /* checkboxes de obras */
+    .obras-check-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .obras-check-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--cinza-900);
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 6px;
+      padding: 8px 14px;
+      transition: border-color 0.15s, background 0.15s;
+      text-transform: none;
+      letter-spacing: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    .obras-check-label:has(input:checked) {
+      border-color: var(--azul);
+      background: rgba(6,66,142,0.06);
+      color: var(--azul);
+    }
+    .obras-check-label input[type=checkbox] {
+      width: auto;
+      padding: 0;
+      margin: 0;
+      accent-color: var(--azul);
+    }
+
     .divisor { height: 1px; background: var(--cinza-200); margin: 24px 0; }
 
-    /* ── Botões ── */
     .btn-salvar {
       background: var(--azul);
       color: var(--branco);
@@ -205,7 +230,6 @@
     .btn-salvar:active { transform: scale(0.98); }
     .btn-salvar:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    /* ── Mensagens ── */
     .msg {
       display: none;
       border-radius: 6px;
@@ -225,14 +249,8 @@
       vertical-align: middle; margin-right: 6px;
     }
 
-    /* ── Lista ── */
     .lista-wrap { margin-top: 0; }
-
-    .lista-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
+    .lista-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .lista-titulo { font-size: 12px; font-weight: 700; color: var(--cinza-700); text-transform: uppercase; letter-spacing: 0.5px; }
 
     .badge-count {
@@ -306,7 +324,6 @@
       background: rgba(203,9,53,0.06);
     }
 
-    /* Modal confirmação exclusão */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.5); z-index: 1000;
@@ -345,14 +362,13 @@
     <div class="topbar-esq">
       <span class="topbar-logo">Direcional</span>
       <span class="topbar-sep"></span>
-      <span class="topbar-titulo">Cadastros — 647CC</span>
+      <span class="topbar-titulo">Cadastros</span>
+      <span class="topbar-obra-badge" id="topbarObraBadge">—</span>
     </div>
     <button class="btn-voltar" onclick="location.href='647cc-login.html'">← Voltar</button>
   </div>
 
   <div class="container">
-
-    <!-- Abas -->
     <div class="abas">
       <button class="aba ativa" onclick="trocarAba('usuarios', this)">👤 Usuários do sistema</button>
       <button class="aba"       onclick="trocarAba('mod', this)">👷 Colaboradores MOD</button>
@@ -397,6 +413,17 @@
               <option value="administrador">Administrador — configura o sistema</option>
             </select>
           </div>
+          <div class="campo">
+            <label>Obras com acesso</label>
+            <div class="obras-check-group">
+              <label class="obras-check-label">
+                <input type="checkbox" id="u-obra-647cc" value="647cc"/> 647 CC
+              </label>
+              <label class="obras-check-label">
+                <input type="checkbox" id="u-obra-647cb" value="647cb"/> 647 CB
+              </label>
+            </div>
+          </div>
           <button class="btn-salvar" id="btn-salvar-usuario" onclick="salvarUsuario()">Criar usuário</button>
           <div class="msg" id="msg-usuario"></div>
 
@@ -415,7 +442,7 @@
       <div class="painel" id="painel-mod">
         <div class="card-header">
           <div class="card-header-titulo">Novo colaborador — Mão de Obra Direta</div>
-          <div class="card-header-desc">Colaboradores apropriados nas frentes de serviço. Não acessam o sistema.</div>
+          <div class="card-header-desc" id="mod-desc">Colaboradores da obra ativa. Não acessam o sistema.</div>
         </div>
         <div class="card-body">
           <div class="grid-2">
@@ -517,8 +544,8 @@
         </div>
       </div>
 
-    </div><!-- /card -->
-  </div><!-- /container -->
+    </div>
+  </div>
 
   <!-- Modal confirmação exclusão -->
   <div class="modal-overlay" id="modalExcluir">
@@ -538,7 +565,7 @@
     import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut }
                                 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, orderBy }
+    import { getFirestore, collection, addDoc, getDocs, doc, setDoc, deleteDoc, serverTimestamp, query, where }
                                 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -554,10 +581,12 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
+    const OBRAS_NOMES = { '647cc': '647 CC', '647cb': '647 CB' };
+
     let adminEmail = '';
     let adminSenha = '';
+    let obraAtiva  = '';
 
-    // ── Exclusão ──
     let excluirCallback = null;
 
     window.abrirModalExcluir = function(nome, callback) {
@@ -588,6 +617,14 @@
     onAuthStateChanged(auth, async (user) => {
       if (!user) { window.location.href = '647cc-login.html'; return; }
       adminEmail = user.email;
+      obraAtiva  = sessionStorage.getItem('obraAtiva') || '';
+      if (!obraAtiva) { window.location.href = '647cc-login.html'; return; }
+
+      // Exibir obra ativa no topbar e descrição MOD
+      const nomeObra = OBRAS_NOMES[obraAtiva] || obraAtiva.toUpperCase();
+      document.getElementById('topbarObraBadge').textContent = nomeObra;
+      document.getElementById('mod-desc').textContent = `Colaboradores da ${nomeObra}. Não acessam o sistema.`;
+
       carregarListas();
     });
 
@@ -597,9 +634,11 @@
       const email     = document.getElementById('u-email').value.trim();
       const senha     = document.getElementById('u-senha').value;
       const perfil    = document.getElementById('u-perfil').value;
+      const obras     = ['647cc','647cb'].filter(id => document.getElementById(`u-obra-${id}`).checked);
 
       if (!nome || !matricula || !email || !senha || !perfil) { showMsg('msg-usuario','Preencha todos os campos.','erro'); return; }
       if (senha.length < 6) { showMsg('msg-usuario','Senha com mínimo 6 caracteres.','erro'); return; }
+      if (obras.length === 0) { showMsg('msg-usuario','Selecione ao menos uma obra.','erro'); return; }
 
       const btn = document.getElementById('btn-salvar-usuario');
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Criando…';
@@ -609,12 +648,13 @@
         if (!adminSenha) { btn.disabled = false; btn.innerHTML = 'Criar usuário'; return; }
 
         const cred = await createUserWithEmailAndPassword(auth, email, senha);
-        await setDoc(doc(db, 'usuarios', cred.user.uid), { nome, matricula, email, perfil, criadoEm: serverTimestamp() });
+        await setDoc(doc(db, 'usuarios', cred.user.uid), { nome, matricula, email, perfil, obras, criadoEm: serverTimestamp() });
 
         await signOut(auth);
         await signInWithEmailAndPassword(auth, adminEmail, adminSenha);
 
         ['u-nome','u-matricula','u-email','u-senha','u-perfil'].forEach(id => document.getElementById(id).value = '');
+        ['647cc','647cb'].forEach(id => document.getElementById(`u-obra-${id}`).checked = false);
         showMsg('msg-usuario', `✓ Usuário "${nome}" criado com sucesso.`, 'sucesso');
         carregarUsuarios();
       } catch(e) {
@@ -629,12 +669,15 @@
       document.getElementById('count-usuarios').textContent = snap.size;
       if (snap.empty) { lista.innerHTML = '<div class="lista-vazia">Nenhum usuário cadastrado ainda.</div>'; return; }
       const cores = { administrador: 'badge-verm', engenheiro: 'badge-azul', operador: 'badge-verde' };
-      lista.innerHTML = snap.docs.map(d => {
+      // Ordenar por nome no cliente (sem orderBy para evitar índice composto)
+      const docs = snap.docs.slice().sort((a, b) => (a.data().nome||'').localeCompare(b.data().nome||''));
+      lista.innerHTML = docs.map(d => {
         const u = d.data(); const uid = d.id;
+        const obrasStr = (u.obras || []).map(o => OBRAS_NOMES[o] || o).join(', ') || '—';
         return `<div class="item-lista">
           <div class="item-info">
             <div class="item-nome">${capitalizar(u.nome)}</div>
-            <div class="item-detalhe">DE: ${u.matricula} · ${u.email}</div>
+            <div class="item-detalhe">DE: ${u.matricula} · ${u.email} · Obras: ${obrasStr}</div>
           </div>
           <span class="item-badge ${cores[u.perfil]||'badge-azul'}">${u.perfil}</span>
           <button class="btn-excluir" title="Excluir" onclick="confirmarExcluirUsuario('${uid}','${u.nome.replace(/'/g,"\\'")}')">🗑</button>
@@ -665,7 +708,13 @@
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando…';
 
       try {
-        await addDoc(collection(db, 'colaboradores'), { matricula, nome, funcao, encarregado, custoMes, custoDia, custoHora, ativo: true, criadoEm: serverTimestamp() });
+        await addDoc(collection(db, 'colaboradores'), {
+          matricula, nome, funcao, encarregado,
+          custoMes, custoDia, custoHora,
+          obraId: obraAtiva,
+          ativo: true,
+          criadoEm: serverTimestamp()
+        });
         ['m-matricula','m-nome','m-funcao','m-encarregado','m-custo-mes','m-custo-dia','m-custo-hora'].forEach(id => document.getElementById(id).value = '');
         showMsg('msg-mod', `✓ Colaborador "${nome}" cadastrado.`, 'sucesso');
         carregarMOD();
@@ -674,11 +723,13 @@
     };
 
     async function carregarMOD() {
-      const snap = await getDocs(query(collection(db, 'colaboradores'), orderBy('criadoEm', 'desc')));
+      const snap = await getDocs(query(collection(db, 'colaboradores'), where('obraId', '==', obraAtiva)));
       const lista = document.getElementById('lista-mod');
       document.getElementById('count-mod').textContent = snap.size;
       if (snap.empty) { lista.innerHTML = '<div class="lista-vazia">Nenhum colaborador cadastrado ainda.</div>'; return; }
-      lista.innerHTML = snap.docs.map(d => {
+      // Ordenar por nome no cliente
+      const docs = snap.docs.slice().sort((a,b) => (a.data().nome||'').localeCompare(b.data().nome||''));
+      lista.innerHTML = docs.map(d => {
         const m = d.data(); const cid = d.id;
         const hora = m.custoHora ? `R$ ${m.custoHora.toFixed(2)}/h` : '—';
         return `<div class="item-lista">
@@ -713,7 +764,13 @@
       btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Salvando…';
 
       try {
-        await addDoc(collection(db, 'frentes'), { nome, codigo, orcado, descricao, custoRealizado: 0, ativa: true, criadoEm: serverTimestamp() });
+        await addDoc(collection(db, 'frentes'), {
+          nome, codigo, orcado, descricao,
+          obraId: obraAtiva,
+          custoRealizado: 0,
+          ativa: true,
+          criadoEm: serverTimestamp()
+        });
         ['f-nome','f-codigo','f-orcado','f-descricao'].forEach(id => document.getElementById(id).value = '');
         showMsg('msg-frente', `✓ Frente "${nome}" cadastrada.`, 'sucesso');
         carregarFrentes();
@@ -722,11 +779,12 @@
     };
 
     async function carregarFrentes() {
-      const snap = await getDocs(query(collection(db, 'frentes'), orderBy('criadoEm', 'desc')));
+      const snap = await getDocs(query(collection(db, 'frentes'), where('obraId', '==', obraAtiva)));
       const lista = document.getElementById('lista-frentes');
       document.getElementById('count-frentes').textContent = snap.size;
       if (snap.empty) { lista.innerHTML = '<div class="lista-vazia">Nenhuma frente cadastrada ainda.</div>'; return; }
-      lista.innerHTML = snap.docs.map(d => {
+      const docs = snap.docs.slice().sort((a,b) => (a.data().nome||'').localeCompare(b.data().nome||''));
+      lista.innerHTML = docs.map(d => {
         const f = d.data(); const fid = d.id;
         const orcado = f.orcado ? `R$ ${f.orcado.toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
         return `<div class="item-lista">

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>647CC · Gestão de Obra</title>
+  <title>Gestão de Obra · Direcional</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -84,9 +84,7 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    .card-corpo {
-      padding: 32px 36px 36px;
-    }
+    .card-corpo { padding: 32px 36px 36px; }
 
     .campo { margin-bottom: 18px; }
 
@@ -174,6 +172,37 @@
       margin-right: 6px;
     }
 
+    /* ── Seletor de obra ── */
+    .tela-obra { display: none; width: 100%; max-width: 400px; }
+
+    .obras-lista { display: grid; gap: 10px; margin-top: 4px; }
+
+    .btn-obra {
+      background: var(--cinza-100);
+      border: 1px solid var(--cinza-200);
+      border-radius: 8px;
+      padding: 18px 20px;
+      color: var(--cinza-900);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: 'Inter', sans-serif;
+      width: 100%;
+    }
+
+    .btn-obra:hover {
+      border-color: var(--azul);
+      background: rgba(6,66,142,0.04);
+    }
+
+    .btn-obra .obra-icone { font-size: 22px; flex-shrink: 0; }
+    .btn-obra .obra-sub { font-size: 11px; font-weight: 400; color: var(--cinza-400); margin-top: 2px; }
+
     /* ── Dashboard ── */
     .dashboard { display: none; width: 100%; max-width: 480px; }
 
@@ -194,9 +223,10 @@
     .dash-bem-vindo { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
     .dash-nome { font-size: 22px; font-weight: 700; color: var(--branco); }
 
+    .dash-badges { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+
     .dash-perfil-badge {
       display: inline-block;
-      margin-top: 10px;
       background: rgba(255,255,255,0.15);
       color: var(--branco);
       border-radius: 4px;
@@ -207,6 +237,22 @@
       letter-spacing: 1.5px;
       text-transform: uppercase;
     }
+
+    .dash-obra-badge {
+      display: inline-block;
+      background: rgba(203,9,53,0.7);
+      color: var(--branco);
+      border-radius: 4px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .dash-obra-badge:hover { background: rgba(203,9,53,0.9); }
 
     .dash-corpo {
       background: var(--branco);
@@ -291,7 +337,6 @@
       border-color: var(--vermelho);
       background: rgba(203,9,53,0.08);
     }
-    .btn-acao.reprovados-alert .icone { filter: none; }
   </style>
 </head>
 <body>
@@ -301,7 +346,7 @@
     <div class="card-topo">
       <div class="logo-empresa">Direcional Engenharia</div>
       <div class="logo-titulo">Gestão de Obra</div>
-      <div class="logo-sub">647CC · Célèbre Residence · Contagem</div>
+      <div class="logo-sub">Sistema de apontamento de MOD</div>
     </div>
     <div class="card-corpo">
       <div class="campo">
@@ -315,7 +360,20 @@
       </div>
       <button class="btn-entrar" id="btnEntrar" onclick="entrar()">Entrar</button>
       <div class="msg" id="msgLogin"></div>
-      <div class="rodape">sistema-647cc · v1.0</div>
+      <div class="rodape">sistema-direcional · v2.0</div>
+    </div>
+  </div>
+
+  <!-- SELETOR DE OBRA -->
+  <div class="tela-obra card" id="telaObra">
+    <div class="card-topo">
+      <div class="logo-empresa">Direcional Engenharia</div>
+      <div class="logo-titulo">Selecionar obra</div>
+      <div class="logo-sub" id="obraSubNome">—</div>
+    </div>
+    <div class="card-corpo">
+      <div class="obras-lista" id="listaObras"></div>
+      <button class="btn-sair" style="margin-top:20px" onclick="sair()">Sair da conta</button>
     </div>
   </div>
 
@@ -324,7 +382,10 @@
     <div class="dash-topo">
       <div class="dash-bem-vindo">Bem-vindo de volta,</div>
       <div class="dash-nome" id="dashNome">—</div>
-      <div class="dash-perfil-badge" id="dashPerfil">—</div>
+      <div class="dash-badges">
+        <span class="dash-perfil-badge" id="dashPerfil">—</span>
+        <span class="dash-obra-badge" id="dashObraBadge" title="Clique para trocar de obra">🏗️ —</span>
+      </div>
     </div>
     <div class="dash-corpo">
       <div class="dash-acoes" id="dashAcoes"></div>
@@ -352,6 +413,12 @@
     const auth = getAuth(app);
     const db   = getFirestore(app);
 
+    // Mapa de obras: id → dados de exibição
+    const OBRAS_INFO = {
+      '647cc': { nome: '647 CC', sub: 'Célèbre Residence · Contagem/MG', icone: '🏢' },
+      '647cb': { nome: '647 CB', sub: 'Contagem · MG', icone: '🏗️' },
+    };
+
     const MENUS = {
       administrador: [
         { icone: '🌅', titulo: 'Lançamento — manhã',      desc: 'Registrar frente e equipe do dia',          pagina: '647cc-lancamento-manha.html' },
@@ -370,12 +437,33 @@
       ],
     };
 
+    let dadosUsuario = null;
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const snap  = await getDoc(doc(db, 'usuarios', user.uid));
-        const dados = snap.exists() ? snap.data() : { nome: user.email, perfil: 'operador' };
-        mostrarDashboard(dados);
+        dadosUsuario = snap.exists() ? snap.data() : { nome: user.email, perfil: 'operador', obras: [] };
+        const obras = dadosUsuario.obras || [];
+
+        // Verificar se já há uma obra salva na sessão
+        const obraSession = sessionStorage.getItem('obraAtiva');
+        if (obraSession && obras.includes(obraSession)) {
+          mostrarDashboard(dadosUsuario, obraSession);
+        } else if (obras.length === 1) {
+          // Apenas uma obra: entra direto
+          sessionStorage.setItem('obraAtiva', obras[0]);
+          mostrarDashboard(dadosUsuario, obras[0]);
+        } else if (obras.length > 1) {
+          // Múltiplas obras: mostrar seletor
+          mostrarSeletorObra(dadosUsuario, obras);
+        } else {
+          // Sem obras associadas (usuário não configurado)
+          mostrarMsg('Seu usuário não possui obras associadas. Contate o administrador.', 'erro');
+          mostrarLogin();
+          await signOut(auth);
+        }
       } else {
+        sessionStorage.removeItem('obraAtiva');
         mostrarLogin();
       }
     });
@@ -406,38 +494,85 @@
       }
     };
 
-    window.sair = async function () { await signOut(auth); };
+    window.sair = async function () {
+      sessionStorage.removeItem('obraAtiva');
+      await signOut(auth);
+    };
 
-    async function mostrarDashboard(dados) {
+    window.trocarObra = function () {
+      if (!dadosUsuario) return;
+      const obras = dadosUsuario.obras || [];
+      if (obras.length <= 1) return;
+      sessionStorage.removeItem('obraAtiva');
+      mostrarSeletorObra(dadosUsuario, obras);
+    };
+
+    function mostrarSeletorObra(dados, obras) {
       document.getElementById('telaLogin').style.display     = 'none';
+      document.getElementById('telaDashboard').style.display = 'none';
+      document.getElementById('telaObra').style.display      = 'block';
+      document.getElementById('obraSubNome').textContent     = capitalizar(dados.nome || '');
+
+      const lista = document.getElementById('listaObras');
+      lista.innerHTML = obras.map(obraId => {
+        const info = OBRAS_INFO[obraId] || { nome: obraId.toUpperCase(), sub: '', icone: '🏗️' };
+        return `<button class="btn-obra" onclick="selecionarObra('${obraId}')">
+          <span class="obra-icone">${info.icone}</span>
+          <span>
+            <div>${info.nome}</div>
+            <div class="obra-sub">${info.sub}</div>
+          </span>
+        </button>`;
+      }).join('');
+    }
+
+    window.selecionarObra = function(obraId) {
+      sessionStorage.setItem('obraAtiva', obraId);
+      mostrarDashboard(dadosUsuario, obraId);
+    };
+
+    async function mostrarDashboard(dados, obraId) {
+      document.getElementById('telaLogin').style.display     = 'none';
+      document.getElementById('telaObra').style.display      = 'none';
       document.getElementById('telaDashboard').style.display = 'block';
       document.getElementById('dashNome').textContent        = capitalizar(dados.nome   || '—');
       document.getElementById('dashPerfil').textContent      = dados.perfil || 'operador';
 
+      const obraInfo = OBRAS_INFO[obraId] || { nome: obraId.toUpperCase() };
+      const badgeObra = document.getElementById('dashObraBadge');
+      badgeObra.textContent = '🏗️ ' + obraInfo.nome;
+      const obras = dados.obras || [];
+      if (obras.length > 1) {
+        badgeObra.title = 'Clique para trocar de obra';
+        badgeObra.onclick = trocarObra;
+      } else {
+        badgeObra.style.cursor = 'default';
+        badgeObra.title = '';
+      }
+
       const perfil = (dados.perfil || 'operador').toLowerCase();
       const acoes  = MENUS[perfil] || MENUS.operador;
 
-      // Busca reprovados apenas para operadores e administradores
+      // Busca reprovados para operadores e administradores, filtrado por obraId
       let qtdReprovados = 0;
       if (perfil === 'operador' || perfil === 'administrador') {
         try {
           const user = auth.currentUser;
-          const hoje = new Date().toISOString().split('T')[0];
-          // Lançamentos reprovados inteiramente
           const snapRep = await getDocs(query(
             collection(db, 'lancamentos_manha'),
-            where('operadorUid', '==', user.uid),
+            where('obraId',          '==', obraId),
+            where('operadorUid',     '==', user.uid),
             where('statusAprovacao', '==', 'reprovado')
           ));
-          // Lançamentos com colaboradores reprovados individualmente (qualquer status)
           const snapInd = await getDocs(query(
             collection(db, 'lancamentos_manha'),
+            where('obraId',      '==', obraId),
             where('operadorUid', '==', user.uid)
           ));
           let repIndividuais = 0;
           snapInd.docs.forEach(d => {
             const l = d.data();
-            if (l.statusAprovacao === 'reprovado') return; // já contado acima
+            if (l.statusAprovacao === 'reprovado') return;
             (l.colaboradores || []).forEach(c => {
               if (c.reprovadoIndividual) repIndividuais++;
             });
@@ -462,6 +597,7 @@
 
     function mostrarLogin() {
       document.getElementById('telaDashboard').style.display = 'none';
+      document.getElementById('telaObra').style.display      = 'none';
       document.getElementById('telaLogin').style.display     = 'block';
       const btn = document.getElementById('btnEntrar');
       btn.disabled = false; btn.innerHTML = 'Entrar';
