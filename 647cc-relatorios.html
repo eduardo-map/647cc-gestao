@@ -499,14 +499,15 @@
       setLoadingAll();
 
       try {
-        // Buscar lançamentos do período e obra
+        // Buscar todos os lançamentos da obra e filtrar por data no cliente
+        // (evita índice composto no Firestore)
         const snap = await getDocs(query(
           collection(db, 'lancamentos_manha'),
-          where('obraId',  '==', obraAtiva),
-          where('dataStr', '>=', inicio),
-          where('dataStr', '<=', fim)
+          where('obraId', '==', obraAtiva)
         ));
-        const lancamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const lancamentos = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(l => l.dataStr >= inicio && l.dataStr <= fim);
 
         // Buscar frentes da obra
         const snapF = await getDocs(query(
