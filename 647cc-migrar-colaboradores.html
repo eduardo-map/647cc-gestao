@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Migração — obraId em colaboradores e frentes</title>
+  <style>
+    body { font-family: sans-serif; background: #F5F7FA; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .card { background: #fff; border-radius: 12px; padding: 32px; max-width: 520px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    h2 { color: #06428E; margin-bottom: 8px; }
+    p  { color: #555; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+    label { font-size: 12px; font-weight: 700; color: #3A3A3A; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+    select, input { width: 100%; padding: 11px 13px; border: 1px solid #E8E8E8; border-radius: 6px; font-size: 14px; margin-bottom: 16px; background: #F5F7FA; outline: none; box-sizing: border-box; }
+    select:focus, input:focus { border-color: #06428E; background: #fff; }
+    button { background: #06428E; color: #fff; border: none; border-radius: 6px; padding: 13px 24px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
+    button:hover { background: #04316A; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #log { margin-top: 20px; background: #F5F7FA; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; color: #333; max-height: 300px; overflow-y: auto; display: none; }
+    .ok   { color: #196B24; }
+    .skip { color: #8A8A8A; }
+    .err  { color: #CB0935; }
+    .sec  { color: #06428E; font-weight: bold; margin-top: 8px; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>🔧 Migração — Colaboradores e Frentes</h2>
+  <p>Adiciona <code>obraId</code> em todos os colaboradores e frentes que ainda não possuem o campo. Registros que já têm o campo <strong>não serão alterados</strong>.</p>
+
+  <label>Seu e-mail de administrador</label>
+  <input type="email" id="email" placeholder="eduardomaia@direcional.com.br"/>
+
+  <label>Sua senha</label>
+  <input type="password" id="senha" placeholder="••••••••"/>
+
+  <label>Obra a associar</label>
+  <select id="obraDefault">
+    <option value="647cc">647 CC — Célèbre Residence</option>
+    <option value="647cb">647 CB</option>
+  </select>
+
+  <button id="btnRodar" onclick="rodar()">Executar migração</button>
+  <div id="log"></div>
+</div>
+
+<script type="module">
+  import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyATyTfAlXhjfaEbbNtGQqKXobpSO99a1mY",
+    authDomain:        "sistema-647cc.firebaseapp.com",
+    projectId:         "sistema-647cc",
+    storageBucket:     "sistema-647cc.firebasestorage.app",
+    messagingSenderId: "556262040392",
+    appId:             "1:556262040392:web:fdfddc34c5e10002aa097d"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  function log(msg, cls) {
+    const el = document.getElementById('log');
+    el.style.display = 'block';
+    el.innerHTML += `<div class="${cls||''}">${msg}</div>`;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  async function migrarColecao(nomeColecao, obraId, campoNome) {
+    log(`— ${nomeColecao} —`, 'sec');
+    const snap = await getDocs(collection(db, nomeColecao));
+    log(`→ ${snap.size} registro(s) encontrado(s).`);
+    let atualizados = 0, ignorados = 0;
+    for (const d of snap.docs) {
+      const dados = d.data();
+      const label = dados[campoNome] || d.id;
+      if (dados.obraId) {
+        log(`⏭ ${label} — já possui obraId: ${dados.obraId}`, 'skip');
+        ignorados++;
+      } else {
+        await updateDoc(doc(db, nomeColecao, d.id), { obraId });
+        log(`✓ ${label} — obraId: ${obraId}`, 'ok');
+        atualizados++;
+      }
+    }
+    log(`Subtotal: ${atualizados} atualizado(s), ${ignorados} ignorado(s).`, 'ok');
+    return { atualizados, ignorados };
+  }
+
+  window.rodar = async function() {
+    const email   = document.getElementById('email').value.trim();
+    const senha   = document.getElementById('senha').value;
+    const obraId  = document.getElementById('obraDefault').value;
+
+    if (!email || !senha) { alert('Preencha e-mail e senha.'); return; }
+
+    const btn = document.getElementById('btnRodar');
+    btn.disabled = true; btn.textContent = 'Executando…';
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('log').style.display = 'block';
+
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+      log('✓ Autenticado com sucesso.', 'ok');
+      log('');
+
+      const r1 = await migrarColecao('colaboradores', obraId, 'nome');
+      log('');
+      const r2 = await migrarColecao('frentes', obraId, 'nome');
+      log('');
+
+      const total = r1.atualizados + r2.atualizados;
+      const pulados = r1.ignorados + r2.ignorados;
+      log(`✅ Migração concluída: ${total} atualizado(s), ${pulados} ignorado(s).`, 'ok');
+      btn.textContent = '✓ Concluído';
+    } catch(e) {
+      const erros = {
+        'auth/invalid-credential': 'E-mail ou senha incorretos.',
+        'auth/user-not-found':     'Usuário não encontrado.',
+        'auth/wrong-password':     'Senha incorreta.',
+        'auth/invalid-email':      'E-mail inválido.',
+      };
+      log('✗ Erro: ' + (erros[e.code] || e.message), 'err');
+      btn.disabled = false; btn.textContent = 'Executar migração';
+    }
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Importar Colaboradores — 647 CB</title>
+  <style>
+    body { font-family: sans-serif; background: #F5F7FA; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .card { background: #fff; border-radius: 12px; padding: 32px; max-width: 540px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    h2 { color: #06428E; margin-bottom: 8px; }
+    p  { color: #555; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+    label { font-size: 12px; font-weight: 700; color: #3A3A3A; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+    input { width: 100%; padding: 11px 13px; border: 1px solid #E8E8E8; border-radius: 6px; font-size: 14px; margin-bottom: 16px; background: #F5F7FA; outline: none; box-sizing: border-box; }
+    input:focus { border-color: #06428E; background: #fff; }
+    button { background: #06428E; color: #fff; border: none; border-radius: 6px; padding: 13px 24px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
+    button:hover { background: #04316A; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #log { margin-top: 20px; background: #F5F7FA; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; color: #333; max-height: 320px; overflow-y: auto; display: none; }
+    .ok  { color: #196B24; }
+    .err { color: #CB0935; }
+    .inf { color: #06428E; font-weight: bold; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>👷 Importar colaboradores — 647 CB</h2>
+  <p>Importa <strong>133 colaboradores ativos de MOD direta</strong> da obra 647 CB para o Firestore. Já inclui <code>obraId: "647cb"</code> em todos os registros.</p>
+
+  <label>Seu e-mail de administrador</label>
+  <input type="email" id="email" placeholder="eduardomaia@direcional.com.br"/>
+
+  <label>Sua senha</label>
+  <input type="password" id="senha" placeholder="••••••••"/>
+
+  <button id="btnImportar" onclick="importar()">Importar 133 colaboradores</button>
+  <div id="log"></div>
+</div>
+
+<script type="module">
+  import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyATyTfAlXhjfaEbbNtGQqKXobpSO99a1mY",
+    authDomain:        "sistema-647cc.firebaseapp.com",
+    projectId:         "sistema-647cc",
+    storageBucket:     "sistema-647cc.firebasestorage.app",
+    messagingSenderId: "556262040392",
+    appId:             "1:556262040392:web:fdfddc34c5e10002aa097d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  const COLABORADORES = [
+  {
+    "nome": "Adenilson Rodrigues Mangabeira",
+    "matricula": "2760135",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Adriano Gerasmo Gomes",
+    "matricula": "2760104",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Adriel Anilton Da Silva",
+    "matricula": "2360270",
+    "funcao": "Meio Oficial De Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Alberto Pereira De Araujo",
+    "matricula": "2660143",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Alexandre Andrade Soares",
+    "matricula": "2760191",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Alexandre Gomes Nazario",
+    "matricula": "2760161",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Alexsandro Hilario De Almeida",
+    "matricula": "2760151",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Alonso Vinicius Costa",
+    "matricula": "2760086",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Anderson Denis De Sene Brito",
+    "matricula": "2760142",
+    "funcao": "Meio Oficial De Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Anderson Junio Dias De Oliveira",
+    "matricula": "2360120",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Andre Luiz Meireles Da Costa",
+    "matricula": "2760175",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Antonio Jose Da Silva",
+    "matricula": "2760177",
+    "funcao": "Operador De Guincho",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Arthur Rodrigues Cruz Divalo",
+    "matricula": "2780098",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Atevaldo Costa De Aguilar",
+    "matricula": "2760165",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Avilmar Gomes Ruas",
+    "matricula": "2760140",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Brendo De Oliveira Santos",
+    "matricula": "2660147",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Breno Rodrigues De Oliveira",
+    "matricula": "2760182",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Bruno Costa Dos Santos",
+    "matricula": "2660117",
+    "funcao": "Bombeiro Hidraulico",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Bruno Oliveira De Jesus",
+    "matricula": "2660078",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Carlos Augusto Lima Bernardes",
+    "matricula": "2780039",
+    "funcao": "Bombeiro Hidraulico",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Carlos Fernando Ribeiro Do Nascimento",
+    "matricula": "2760184",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Carlos Henrique Manoel Dos Santos",
+    "matricula": "2660146",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Claudimar Goncalves Silva",
+    "matricula": "2760136",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Cleiton Jose Dos Santos",
+    "matricula": "2760071",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Cosme Batista De Melo",
+    "matricula": "2760200",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Cristiano Martins De Souza",
+    "matricula": "2760075",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Daniel Fernando Crescencio Bernardes",
+    "matricula": "2760067",
+    "funcao": "Serralheiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Daniel Henrique Ribeiro Da Cruz",
+    "matricula": "2760123",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Daniel Martins Goncalves",
+    "matricula": "2760152",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Danizete Lopes Farias Ferreira",
+    "matricula": "2080038",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Darwin Antonio Diaz Gutierrez",
+    "matricula": "2780088",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Diego Ferreira Da Costa",
+    "matricula": "2760198",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Dilson Santos Borges",
+    "matricula": "2760170",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Domingos Prates Fernandes",
+    "matricula": "2760020",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Edenir Pedro Da Cruz",
+    "matricula": "2760077",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Edson Junio Dos Santos",
+    "matricula": "2760079",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Eduardo Rafael Palmares Oliveros",
+    "matricula": "2780086",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Eli Goncalves Soares",
+    "matricula": "2660182",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Emerson De Oliveira Matos",
+    "matricula": "2760125",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Enivaldo Da Silva Alves",
+    "matricula": "2760021",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Erisvaldo De Lima Melo",
+    "matricula": "2760155",
+    "funcao": "Carpinteiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Everton Viturino Alves",
+    "matricula": "2360272",
+    "funcao": "Meio Oficial De Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Ezequiel Goncalves Pedrosa",
+    "matricula": "2760178",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Fabio Alexandre Ribeiro",
+    "matricula": "2760163",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Fabio Soares Ribeiro",
+    "matricula": "2780018",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Farley Dos Santos Freitas",
+    "matricula": "2760195",
+    "funcao": "Bombeiro Hidraulico",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Felipe Miranda Da Silva",
+    "matricula": "2760127",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Fernande Costa Santos De Freitas",
+    "matricula": "2660180",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Franciarlo Nunes Dos Santos",
+    "matricula": "2760076",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Francisco Borges Monteiro",
+    "matricula": "2760072",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Gideone Gomes De Souza",
+    "matricula": "2760110",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Gilberto Vieira Moraes",
+    "matricula": "2760081",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Gilmar Gomes Da Silva",
+    "matricula": "2760145",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Gilson Joana De Oliveira",
+    "matricula": "2760074",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Glayson Douglas Dos Reis Santos",
+    "matricula": "2760121",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Glaysson Henrique De Andrade",
+    "matricula": "2760114",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Gleice Kelly Santos Silva",
+    "matricula": "2760146",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Helio Augusto Tavares Ribeiro",
+    "matricula": "2760186",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Helio Genebaldo Pedro",
+    "matricula": "2760179",
+    "funcao": "Bombeiro Hidraulico",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Hercules Filipe De Oliveira Da Silva",
+    "matricula": "2760193",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Herlan Tassio Pereira De Jesus",
+    "matricula": "2780068",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Heverton Rodrigues Moreira",
+    "matricula": "2760113",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Ivoney Jesus Da Silva",
+    "matricula": "2760116",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jaci Saturnino",
+    "matricula": "2660154",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jales Balbino Nogueira",
+    "matricula": "2760118",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Janinho Luiz Da Silva",
+    "matricula": "2760154",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jessica Rodrigues De Souza",
+    "matricula": "2660194",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Joao Batista Marcelino De Lima",
+    "matricula": "2780037",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Joao Felipe Ferreira De Paula",
+    "matricula": "2050042",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Joao Ferreira Vieira",
+    "matricula": "2660155",
+    "funcao": "Carpinteiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Joao Paulo Costa Pereira",
+    "matricula": "2760080",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Joaquim Wendel Goncalves Freitas",
+    "matricula": "2760185",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Joel Lopes Amaral",
+    "matricula": "2760187",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jonathan Santos De Souza",
+    "matricula": "2760183",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Alves",
+    "matricula": "2660022",
+    "funcao": "Bombeiro Hidraulico",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Antonio Dos Santos",
+    "matricula": "2660156",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Carlos Ferreira Oliveira",
+    "matricula": "2760176",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Carlos Quiel",
+    "matricula": "2760093",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose De Matos",
+    "matricula": "2760147",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Fernandes Viana",
+    "matricula": "2760199",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Galdino Rodrigues",
+    "matricula": "2760144",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Geraldo Meira",
+    "matricula": "2760025",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Luiz Alves De Oliveira",
+    "matricula": "2760019",
+    "funcao": "Serralheiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Maria Da Silveira",
+    "matricula": "2210165",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Jose Pimentel Dos Santos",
+    "matricula": "2760138",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Josias Carvalho De Lima Marcal",
+    "matricula": "2760045",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Julmar Ferreira Vital",
+    "matricula": "2660160",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Leandro Dos Santos Martins",
+    "matricula": "2760119",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Lohan Andrade Das Chagas",
+    "matricula": "2360217",
+    "funcao": "Meio Oficial De Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Lucas Moreira Santos",
+    "matricula": "2760190",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Lucas Paulo Costa Cunha",
+    "matricula": "2780019",
+    "funcao": "Meio Oficial Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Lucivaldo Dias Carvalho",
+    "matricula": "2760078",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Luis Jose Palacios Rojas",
+    "matricula": "2660179",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Luiz Otavio Bilheiro",
+    "matricula": "2760150",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Manoel Alexandre Da Silva Ramos",
+    "matricula": "2760143",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Marcelo Bigao",
+    "matricula": "2760087",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Mario Sergio Pinheiro",
+    "matricula": "2660208",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Matheus Ribeiro Brito",
+    "matricula": "2760205",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Michael Waleff Pereira Silva",
+    "matricula": "2210314",
+    "funcao": "Carpinteiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Milena Piedade Da Cruz",
+    "matricula": "2660193",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Mislayne Goncalves De Souza Oliveira",
+    "matricula": "2660183",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Natalino Da Aparecida Moreira Gomes",
+    "matricula": "2760109",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Nierze Gomes Alvarenga",
+    "matricula": "2760117",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Oscar Luis Hernandez Ortiz",
+    "matricula": "2780079",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Osiris De Jesus Hernandez",
+    "matricula": "2780082",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Paulo Cesar Nascimento Da Silva",
+    "matricula": "2660178",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Paulo Lucas Da Silva",
+    "matricula": "2780067",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Pedro Henrique Da Silva Neto",
+    "matricula": "2760137",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Pericles Henrique Rodrigues Malaquias",
+    "matricula": "1820271",
+    "funcao": "Carpinteiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Renan Goncalves Meireles",
+    "matricula": "2780066",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Richard Alfonso Cueche",
+    "matricula": "2780076",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Richard Guilherme De Freitas",
+    "matricula": "2760105",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Roberto Ferreira Barbosa",
+    "matricula": "2660187",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Roberto Furtado Da Costa",
+    "matricula": "2760088",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Rodrigo Antunes Cunha",
+    "matricula": "2760188",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Ruan Souza Lopes Gama",
+    "matricula": "2760181",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Sebastiao Alves Do Nascimento",
+    "matricula": "2760014",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Sergio Alexandre Estacio De Mattos",
+    "matricula": "2760196",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Sergio Da Silva Mendes",
+    "matricula": "2760202",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Silvio Antonio De Oliveira",
+    "matricula": "2760068",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Tatiana Teixeira Silva Mendonca",
+    "matricula": "2760141",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Urdelei Francisco De Paulo",
+    "matricula": "2760169",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Vantuil Simao Dias",
+    "matricula": "2760192",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Victor Junior Alcantara Monteiro",
+    "matricula": "2760194",
+    "funcao": "Pedreiro",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Vitor Vilares Fernandes Oliveira",
+    "matricula": "2360273",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Waldelirio Pinheiro De Lacerda",
+    "matricula": "2660167",
+    "funcao": "Armador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Wandiner Nascimento Dos Santos",
+    "matricula": "2760130",
+    "funcao": "Eletricista",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Wesley De Souza Lianda",
+    "matricula": "2760092",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Weverton Ferreira Araujo",
+    "matricula": "2660118",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Willian Geraldo Teixeira",
+    "matricula": "2660035",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Willian Souza Melo",
+    "matricula": "2660186",
+    "funcao": "Sinalizador De Grua",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Wilson Alves Da Silva",
+    "matricula": "2760085",
+    "funcao": "Montador",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  },
+  {
+    "nome": "Wilson Bracho Gonzalez",
+    "matricula": "2780077",
+    "funcao": "Servente",
+    "encarregado": "",
+    "custoMes": 0,
+    "custoDia": 0,
+    "custoHora": 0,
+    "obraId": "647cb",
+    "ativo": true
+  }
+];
+
+  function log(msg, cls) {
+    const el = document.getElementById('log');
+    el.style.display = 'block';
+    el.innerHTML += '<div class="' + (cls||'') + '">' + msg + '</div>';
+    el.scrollTop = el.scrollHeight;
+  }
+
+  window.importar = async function() {
+    const email = document.getElementById('email').value.trim();
+    const senha = document.getElementById('senha').value;
+    if (!email || !senha) { alert('Preencha e-mail e senha.'); return; }
+
+    const btn = document.getElementById('btnImportar');
+    btn.disabled = true; btn.textContent = 'Importando…';
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('log').style.display = 'block';
+
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+      log('✓ Autenticado.', 'ok');
+      log('→ Iniciando importação de ' + COLABORADORES.length + ' colaboradores…', 'inf');
+
+      let ok = 0, erros = 0;
+      for (const c of COLABORADORES) {
+        try {
+          await addDoc(collection(db, 'colaboradores'), { ...c, criadoEm: serverTimestamp() });
+          log('✓ ' + c.nome + ' (' + c.funcao + ')', 'ok');
+          ok++;
+        } catch(e) {
+          log('✗ ' + c.nome + ' — ' + e.message, 'err');
+          erros++;
+        }
+      }
+
+      log('', '');
+      log('✅ Concluído: ' + ok + ' importado(s)' + (erros > 0 ? ', ' + erros + ' erro(s).' : '.'), 'ok');
+      btn.textContent = '✓ Importação concluída';
+    } catch(e) {
+      const erros = {
+        'auth/invalid-credential': 'E-mail ou senha incorretos.',
+        'auth/user-not-found':     'Usuário não encontrado.',
+        'auth/wrong-password':     'Senha incorreta.',
+      };
+      log('✗ ' + (erros[e.code] || e.message), 'err');
+      btn.disabled = false; btn.textContent = 'Importar 133 colaboradores';
+    }
+  };
+</script>
+</body>
+</html>
