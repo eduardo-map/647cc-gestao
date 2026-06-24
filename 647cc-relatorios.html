@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Relatórios · Gestão de Obra</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --azul:      #06428E;
+      --azul-dk:   #04316A;
+      --azul-lt:   #2E86F6;
+      --azul-bg:   #EBF2FC;
+      --vermelho:  #CB0935;
+      --verm-bg:   #FDEEF1;
+      --verde:     #196B24;
+      --verde-bg:  #EBF5EC;
+      --laranja:   #E97132;
+      --laran-bg:  #FDF3EC;
+      --cinza-900: #171717;
+      --cinza-700: #3A3A3A;
+      --cinza-400: #8A8A8A;
+      --cinza-200: #E8E8E8;
+      --cinza-100: #F5F7FA;
+      --branco:    #FFFFFF;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cinza-100);
+      color: var(--cinza-900);
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--azul);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 3px solid var(--vermelho);
+    }
+    .topbar-esq { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase; }
+    .topbar-sep  { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+    .topbar-titulo { font-size: 15px; font-weight: 600; color: var(--branco); }
+    .topbar-obra-badge {
+      background: rgba(203,9,53,0.7); color: var(--branco);
+      border-radius: 4px; padding: 3px 10px;
+      font-size: 10px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .btn-voltar {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px; padding: 7px 14px;
+      color: var(--branco); font-size: 12px;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+    }
+    .btn-voltar:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── Layout ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+
+    /* ── Filtro de período ── */
+    .filtro-bar {
+      background: var(--branco);
+      border: 1px solid var(--cinza-200);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .filtro-campo { display: flex; flex-direction: column; gap: 5px; }
+    .filtro-campo label { font-size: 10px; font-weight: 700; color: var(--cinza-400); text-transform: uppercase; letter-spacing: 0.5px; }
+    .filtro-campo input[type=date] {
+      background: var(--cinza-100); border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 8px 12px;
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      color: var(--cinza-900); outline: none;
+    }
+    .filtro-campo input[type=date]:focus { border-color: var(--azul); background: var(--branco); }
+    .btn-filtrar {
+      background: var(--azul); color: var(--branco);
+      border: none; border-radius: 6px;
+      padding: 9px 20px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: background 0.15s;
+    }
+    .btn-filtrar:hover { background: var(--azul-dk); }
+    .btn-filtrar:disabled { opacity: 0.5; cursor: not-allowed; }
+    .filtro-periodo-label {
+      font-size: 11px; color: var(--cinza-400);
+      font-family: 'JetBrains Mono', monospace;
+      margin-left: auto; align-self: center;
+    }
+
+    /* ── Abas ── */
+    .abas {
+      display: flex; gap: 0;
+      background: var(--branco);
+      border: 1px solid var(--cinza-200);
+      border-radius: 8px; padding: 4px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      overflow-x: auto;
+    }
+    .aba {
+      flex: 1; min-width: 120px;
+      padding: 9px 8px; border-radius: 6px; border: none;
+      background: transparent; color: var(--cinza-400);
+      font-size: 11px; font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer; transition: all 0.15s;
+      text-align: center; line-height: 1.4; white-space: nowrap;
+    }
+    .aba.ativa { background: var(--azul); color: var(--branco); font-weight: 700; }
+
+    /* ── Painéis ── */
+    .painel { display: none; }
+    .painel.ativo { display: block; }
+
+    /* ── Card genérico ── */
+    .card {
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 10px; overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+    }
+    .card-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--cinza-200);
+      background: var(--cinza-100);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-titulo { font-size: 13px; font-weight: 700; color: var(--cinza-900); }
+    .card-body { padding: 20px; }
+
+    /* ── KPI cards ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .kpi {
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 10px; padding: 16px 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .kpi-label { font-size: 10px; font-weight: 700; color: var(--cinza-400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .kpi-valor { font-size: 22px; font-weight: 700; color: var(--cinza-900); line-height: 1; }
+    .kpi-sub   { font-size: 11px; color: var(--cinza-400); margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+    .kpi.azul  { border-left: 3px solid var(--azul); }
+    .kpi.verde { border-left: 3px solid var(--verde); }
+    .kpi.verm  { border-left: 3px solid var(--vermelho); }
+    .kpi.laran { border-left: 3px solid var(--laranja); }
+
+    /* ── Tabela ── */
+    .tabela-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: var(--cinza-100); }
+    th {
+      padding: 10px 14px; text-align: left;
+      font-size: 10px; font-weight: 700; color: var(--cinza-400);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--cinza-200);
+      white-space: nowrap;
+    }
+    td {
+      padding: 11px 14px; border-bottom: 1px solid var(--cinza-200);
+      color: var(--cinza-900);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--cinza-100); }
+    .td-mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    .td-right { text-align: right; }
+
+    /* ── Badge inline ── */
+    .badge {
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 10px; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; white-space: nowrap;
+    }
+    .badge-verde { background: var(--verde-bg); color: var(--verde); }
+    .badge-verm  { background: var(--verm-bg);  color: var(--vermelho); }
+    .badge-azul  { background: var(--azul-bg);  color: var(--azul); }
+    .badge-laran { background: var(--laran-bg); color: var(--laranja); }
+
+    /* ── Barra de progresso ── */
+    .prog-wrap { display: flex; align-items: center; gap: 10px; }
+    .prog-bar-bg {
+      flex: 1; height: 8px; background: var(--cinza-200);
+      border-radius: 999px; overflow: hidden; min-width: 80px;
+    }
+    .prog-bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s; }
+    .prog-label { font-size: 11px; font-family: 'JetBrains Mono', monospace; white-space: nowrap; min-width: 42px; text-align: right; }
+
+    /* ── Estado vazio / loading ── */
+    .estado {
+      text-align: center; padding: 48px 24px;
+      color: var(--cinza-400); font-size: 13px;
+    }
+    .estado-icone { font-size: 32px; margin-bottom: 10px; }
+    .estado-titulo { font-weight: 700; color: var(--cinza-700); margin-bottom: 4px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-inline {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid var(--cinza-200); border-top-color: var(--azul);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 0 16px; }
+      .filtro-bar { flex-direction: column; align-items: stretch; }
+      .filtro-periodo-label { margin-left: 0; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-esq">
+      <span class="topbar-logo">Direcional</span>
+      <span class="topbar-sep"></span>
+      <span class="topbar-titulo">Relatórios</span>
+      <span class="topbar-obra-badge" id="topbarObraBadge">—</span>
+    </div>
+    <button class="btn-voltar" onclick="location.href='647cc-login.html'">← Voltar</button>
+  </div>
+
+  <div class="container">
+
+    <!-- Filtro de período -->
+    <div class="filtro-bar">
+      <div class="filtro-campo">
+        <label>Data início</label>
+        <input type="date" id="filtro-inicio"/>
+      </div>
+      <div class="filtro-campo">
+        <label>Data fim</label>
+        <input type="date" id="filtro-fim"/>
+      </div>
+      <button class="btn-filtrar" id="btnFiltrar" onclick="aplicarFiltro()">Atualizar</button>
+      <span class="filtro-periodo-label" id="labelPeriodo">—</span>
+    </div>
+
+    <!-- Abas -->
+    <div class="abas">
+      <button class="aba ativa" onclick="trocarAba('presenca', this)">📋 Presença</button>
+      <button class="aba"       onclick="trocarAba('custo-frente', this)">💰 Custo por frente</button>
+      <button class="aba"       onclick="trocarAba('desempenho', this)">⭐ Desempenho</button>
+      <button class="aba"       onclick="trocarAba('historico', this)">📅 Histórico</button>
+      <button class="aba"       onclick="trocarAba('orcado', this)">📊 Orçado vs. Real</button>
+    </div>
+
+    <!-- ══ ABA PRESENÇA ══ -->
+    <div class="painel ativo" id="painel-presenca">
+      <div class="kpi-grid" id="kpi-presenca"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-titulo">Presença diária por colaborador</span>
+          <span class="badge badge-azul" id="badge-presenca">0 registros</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="tabela-wrap">
+            <table id="tabela-presenca">
+              <thead><tr>
+                <th>Colaborador</th>
+                <th>Função</th>
+                <th class="td-right">Dias presentes</th>
+                <th class="td-right">Total horas</th>
+                <th class="td-right">Custo total</th>
+              </tr></thead>
+              <tbody id="tbody-presenca">
+                <tr><td colspan="5"><div class="estado"><div class="estado-icone">📋</div><div class="estado-titulo">Aplique o filtro para carregar</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ABA CUSTO POR FRENTE ══ -->
+    <div class="painel" id="painel-custo-frente">
+      <div class="kpi-grid" id="kpi-custo-frente"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-titulo">Custo de MOD por frente de serviço</span>
+          <span class="badge badge-azul" id="badge-custo-frente">0 frentes</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="tabela-wrap">
+            <table id="tabela-custo-frente">
+              <thead><tr>
+                <th>Frente</th>
+                <th class="td-right">Lançamentos</th>
+                <th class="td-right">Total horas</th>
+                <th class="td-right">Custo realizado</th>
+              </tr></thead>
+              <tbody id="tbody-custo-frente">
+                <tr><td colspan="4"><div class="estado"><div class="estado-icone">💰</div><div class="estado-titulo">Aplique o filtro para carregar</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ABA DESEMPENHO ══ -->
+    <div class="painel" id="painel-desempenho">
+      <div class="kpi-grid" id="kpi-desempenho"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-titulo">Notas de desempenho por colaborador</span>
+          <span class="badge badge-azul" id="badge-desempenho">0 avaliações</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="tabela-wrap">
+            <table>
+              <thead><tr>
+                <th>Colaborador</th>
+                <th>Função</th>
+                <th class="td-right">Avaliações</th>
+                <th class="td-right">Nota média</th>
+                <th class="td-right">Melhor</th>
+                <th class="td-right">Pior</th>
+              </tr></thead>
+              <tbody id="tbody-desempenho">
+                <tr><td colspan="6"><div class="estado"><div class="estado-icone">⭐</div><div class="estado-titulo">Aplique o filtro para carregar</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ABA HISTÓRICO ══ -->
+    <div class="painel" id="painel-historico">
+      <div class="kpi-grid" id="kpi-historico"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-titulo">Histórico de lançamentos</span>
+          <span class="badge badge-azul" id="badge-historico">0 lançamentos</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="tabela-wrap">
+            <table>
+              <thead><tr>
+                <th>Data</th>
+                <th>Frente</th>
+                <th>Operador</th>
+                <th class="td-right">Colaboradores</th>
+                <th class="td-right">Horas</th>
+                <th class="td-right">Custo</th>
+                <th>Status</th>
+              </tr></thead>
+              <tbody id="tbody-historico">
+                <tr><td colspan="7"><div class="estado"><div class="estado-icone">📅</div><div class="estado-titulo">Aplique o filtro para carregar</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ABA ORÇADO VS REALIZADO ══ -->
+    <div class="painel" id="painel-orcado">
+      <div class="kpi-grid" id="kpi-orcado"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-titulo">Orçado vs. Realizado por frente</span>
+          <span class="badge badge-azul" id="badge-orcado">0 frentes</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="tabela-wrap">
+            <table>
+              <thead><tr>
+                <th>Frente</th>
+                <th class="td-right">Orçado</th>
+                <th class="td-right">Realizado</th>
+                <th class="td-right">Saldo</th>
+                <th>Consumo</th>
+              </tr></thead>
+              <tbody id="tbody-orcado">
+                <tr><td colspan="5"><div class="estado"><div class="estado-icone">📊</div><div class="estado-titulo">Aplique o filtro para carregar</div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <script type="module">
+    import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, where }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyATyTfAlXhjfaEbbNtGQqKXobpSO99a1mY",
+      authDomain:        "sistema-647cc.firebaseapp.com",
+      projectId:         "sistema-647cc",
+      storageBucket:     "sistema-647cc.firebasestorage.app",
+      messagingSenderId: "556262040392",
+      appId:             "1:556262040392:web:fdfddc34c5e10002aa097d"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    const OBRAS_NOMES = { '647cc': '647 CC', '647cb': '647 CB' };
+    let obraAtiva = '';
+
+    // ── Helpers ──
+    const R$ = v => v == null ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const pct = (r, o) => o > 0 ? ((r / o) * 100).toFixed(1) + '%' : '—';
+    const corPct = p => p > 100 ? 'var(--vermelho)' : p > 80 ? 'var(--laranja)' : 'var(--verde)';
+    const notaLabel = n => {
+      if (n >= 9) return ['badge-verde', 'Ótimo'];
+      if (n >= 7) return ['badge-azul',  'Bom'];
+      if (n >= 5) return ['badge-laran', 'Regular'];
+      return ['badge-verm', 'Ruim'];
+    };
+    const statusLabel = s => {
+      const m = { aprovado: ['badge-verde','Aprovado'], reprovado: ['badge-verm','Reprovado'], pendente: ['badge-laran','Pendente'] };
+      return m[s] || ['badge-azul', s || 'Pendente'];
+    };
+    const fmtData = s => {
+      if (!s) return '—';
+      const [y, m, d] = s.split('-');
+      return `${d}/${m}/${y}`;
+    };
+
+    function kpiHtml(items) {
+      return items.map(i => `
+        <div class="kpi ${i.cor||'azul'}">
+          <div class="kpi-label">${i.label}</div>
+          <div class="kpi-valor">${i.valor}</div>
+          ${i.sub ? `<div class="kpi-sub">${i.sub}</div>` : ''}
+        </div>`).join('');
+    }
+
+    function estadoHtml(icone, titulo, desc='') {
+      return `<tr><td colspan="99"><div class="estado">
+        <div class="estado-icone">${icone}</div>
+        <div class="estado-titulo">${titulo}</div>
+        ${desc ? `<div>${desc}</div>` : ''}
+      </div></td></tr>`;
+    }
+
+    function loadingHtml() {
+      return `<tr><td colspan="99"><div class="estado">
+        <span class="spinner-inline"></span> Carregando…
+      </div></td></tr>`;
+    }
+
+    // ── Auth ──
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = '647cc-login.html'; return; }
+      obraAtiva = sessionStorage.getItem('obraAtiva') || '';
+      if (!obraAtiva) { window.location.href = '647cc-login.html'; return; }
+
+      document.getElementById('topbarObraBadge').textContent = OBRAS_NOMES[obraAtiva] || obraAtiva.toUpperCase();
+
+      // Período padrão: mês atual
+      const hoje = new Date();
+      const ini  = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+      document.getElementById('filtro-inicio').value = ini.toISOString().split('T')[0];
+      document.getElementById('filtro-fim').value    = hoje.toISOString().split('T')[0];
+
+      await aplicarFiltro();
+    });
+
+    window.aplicarFiltro = async function() {
+      const inicio = document.getElementById('filtro-inicio').value;
+      const fim    = document.getElementById('filtro-fim').value;
+      if (!inicio || !fim) { alert('Selecione data início e fim.'); return; }
+      if (inicio > fim) { alert('Data início não pode ser maior que a data fim.'); return; }
+
+      document.getElementById('labelPeriodo').textContent = `${fmtData(inicio)} → ${fmtData(fim)}`;
+      document.getElementById('btnFiltrar').disabled = true;
+      document.getElementById('btnFiltrar').innerHTML = '<span class="spinner-inline"></span>';
+
+      setLoadingAll();
+
+      try {
+        // Buscar lançamentos do período e obra
+        const snap = await getDocs(query(
+          collection(db, 'lancamentos_manha'),
+          where('obraId',  '==', obraAtiva),
+          where('dataStr', '>=', inicio),
+          where('dataStr', '<=', fim)
+        ));
+        const lancamentos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Buscar frentes da obra
+        const snapF = await getDocs(query(
+          collection(db, 'frentes'),
+          where('obraId', '==', obraAtiva)
+        ));
+        const frentes = {};
+        snapF.docs.forEach(d => { frentes[d.id] = d.data(); });
+
+        renderPresenca(lancamentos);
+        renderCustoFrente(lancamentos);
+        renderDesempenho(lancamentos);
+        renderHistorico(lancamentos);
+        renderOrcado(lancamentos, frentes);
+      } catch(e) {
+        console.error(e);
+      } finally {
+        document.getElementById('btnFiltrar').disabled = false;
+        document.getElementById('btnFiltrar').textContent = 'Atualizar';
+      }
+    };
+
+    function setLoadingAll() {
+      ['tbody-presenca','tbody-custo-frente','tbody-desempenho','tbody-historico','tbody-orcado']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = loadingHtml(); });
+      ['kpi-presenca','kpi-custo-frente','kpi-desempenho','kpi-historico','kpi-orcado']
+        .forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+    }
+
+    // ══ PRESENÇA ══
+    function renderPresenca(lancamentos) {
+      const aprovados = lancamentos.filter(l => l.statusAprovacao === 'aprovado');
+      const map = {}; // colaboradorNome → { dias, horas, custo, funcao }
+
+      aprovados.forEach(l => {
+        (l.colaboradores || []).forEach(c => {
+          if (c.reprovadoIndividual) return;
+          const k = c.nome || c.colaboradorId;
+          if (!map[k]) map[k] = { nome: c.nome, funcao: c.funcao || '—', dias: 0, horas: 0, custo: 0 };
+          map[k].dias++;
+          map[k].horas += c.turno || 0;
+          map[k].custo += c.custoLancado || 0;
+        });
+      });
+
+      const rows = Object.values(map).sort((a, b) => b.dias - a.dias);
+      const totalDias  = rows.reduce((s, r) => s + r.dias, 0);
+      const totalHoras = rows.reduce((s, r) => s + r.horas, 0);
+      const totalCusto = rows.reduce((s, r) => s + r.custo, 0);
+
+      document.getElementById('kpi-presenca').innerHTML = kpiHtml([
+        { label: 'Colaboradores únicos', valor: rows.length, cor: 'azul' },
+        { label: 'Total presenças',      valor: totalDias,   cor: 'verde' },
+        { label: 'Total horas MOD',      valor: totalHoras.toFixed(1) + 'h', cor: 'laran' },
+        { label: 'Custo total aprovado', valor: R$(totalCusto), cor: 'verm' },
+      ]);
+
+      document.getElementById('badge-presenca').textContent = rows.length + ' colaboradores';
+
+      if (!rows.length) {
+        document.getElementById('tbody-presenca').innerHTML = estadoHtml('📋', 'Nenhuma presença aprovada no período');
+        return;
+      }
+
+      document.getElementById('tbody-presenca').innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.nome}</td>
+          <td><span class="badge badge-azul">${r.funcao}</span></td>
+          <td class="td-right td-mono">${r.dias} dia${r.dias !== 1 ? 's' : ''}</td>
+          <td class="td-right td-mono">${r.horas.toFixed(1)}h</td>
+          <td class="td-right td-mono">${R$(r.custo)}</td>
+        </tr>`).join('');
+    }
+
+    // ══ CUSTO POR FRENTE ══
+    function renderCustoFrente(lancamentos) {
+      const aprovados = lancamentos.filter(l => l.statusAprovacao === 'aprovado');
+      const map = {};
+
+      aprovados.forEach(l => {
+        const k = l.frenteNome || l.frenteId || '—';
+        if (!map[k]) map[k] = { nome: k, lancamentos: 0, horas: 0, custo: 0 };
+        map[k].lancamentos++;
+        map[k].horas += l.totalHoras || 0;
+        map[k].custo += l.custoTotalLancado || 0;
+      });
+
+      const rows = Object.values(map).sort((a, b) => b.custo - a.custo);
+      const totalCusto = rows.reduce((s, r) => s + r.custo, 0);
+      const totalHoras = rows.reduce((s, r) => s + r.horas, 0);
+
+      document.getElementById('kpi-custo-frente').innerHTML = kpiHtml([
+        { label: 'Frentes com lançamentos', valor: rows.length,            cor: 'azul' },
+        { label: 'Total horas MOD',         valor: totalHoras.toFixed(1) + 'h', cor: 'laran' },
+        { label: 'Custo total realizado',   valor: R$(totalCusto),         cor: 'verm' },
+      ]);
+
+      document.getElementById('badge-custo-frente').textContent = rows.length + ' frentes';
+
+      if (!rows.length) {
+        document.getElementById('tbody-custo-frente').innerHTML = estadoHtml('💰', 'Nenhum lançamento aprovado no período');
+        return;
+      }
+
+      document.getElementById('tbody-custo-frente').innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.nome}</td>
+          <td class="td-right td-mono">${r.lancamentos}</td>
+          <td class="td-right td-mono">${r.horas.toFixed(1)}h</td>
+          <td class="td-right td-mono">${R$(r.custo)}</td>
+        </tr>`).join('');
+    }
+
+    // ══ DESEMPENHO ══
+    function renderDesempenho(lancamentos) {
+      const map = {};
+
+      lancamentos.forEach(l => {
+        (l.colaboradores || []).forEach(c => {
+          if (c.nota == null) return;
+          const k = c.nome || c.colaboradorId;
+          if (!map[k]) map[k] = { nome: c.nome, funcao: c.funcao || '—', notas: [] };
+          map[k].notas.push(Number(c.nota));
+        });
+      });
+
+      const rows = Object.values(map)
+        .filter(r => r.notas.length > 0)
+        .map(r => ({
+          ...r,
+          media: r.notas.reduce((s, n) => s + n, 0) / r.notas.length,
+          melhor: Math.max(...r.notas),
+          pior:   Math.min(...r.notas),
+        }))
+        .sort((a, b) => b.media - a.media);
+
+      const totalAval = rows.reduce((s, r) => s + r.notas.length, 0);
+      const mediaGeral = rows.length ? rows.reduce((s, r) => s + r.media, 0) / rows.length : 0;
+
+      document.getElementById('kpi-desempenho').innerHTML = kpiHtml([
+        { label: 'Colaboradores avaliados', valor: rows.length,          cor: 'azul' },
+        { label: 'Total avaliações',        valor: totalAval,             cor: 'verde' },
+        { label: 'Nota média geral',        valor: mediaGeral.toFixed(1), cor: mediaGeral >= 7 ? 'verde' : mediaGeral >= 5 ? 'laran' : 'verm' },
+      ]);
+
+      document.getElementById('badge-desempenho').textContent = totalAval + ' avaliações';
+
+      if (!rows.length) {
+        document.getElementById('tbody-desempenho').innerHTML = estadoHtml('⭐', 'Nenhuma avaliação no período', 'Registre notas no Lançamento — fim do dia');
+        return;
+      }
+
+      document.getElementById('tbody-desempenho').innerHTML = rows.map(r => {
+        const [cls, label] = notaLabel(r.media);
+        return `<tr>
+          <td>${r.nome}</td>
+          <td><span class="badge badge-azul">${r.funcao}</span></td>
+          <td class="td-right td-mono">${r.notas.length}</td>
+          <td class="td-right"><span class="badge ${cls}">${r.media.toFixed(1)} — ${label}</span></td>
+          <td class="td-right td-mono">${r.melhor.toFixed(1)}</td>
+          <td class="td-right td-mono">${r.pior.toFixed(1)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ══ HISTÓRICO ══
+    function renderHistorico(lancamentos) {
+      const sorted = [...lancamentos].sort((a, b) => (b.dataStr || '').localeCompare(a.dataStr || ''));
+
+      const totalHoras = lancamentos.reduce((s, l) => s + (l.totalHoras || 0), 0);
+      const totalCusto = lancamentos.reduce((s, l) => s + (l.custoTotalLancado || 0), 0);
+      const aprovados  = lancamentos.filter(l => l.statusAprovacao === 'aprovado').length;
+
+      document.getElementById('kpi-historico').innerHTML = kpiHtml([
+        { label: 'Total lançamentos', valor: lancamentos.length, cor: 'azul' },
+        { label: 'Aprovados',         valor: aprovados,          cor: 'verde' },
+        { label: 'Total horas',       valor: totalHoras.toFixed(1) + 'h', cor: 'laran' },
+        { label: 'Custo lançado',     valor: R$(totalCusto), cor: 'verm' },
+      ]);
+
+      document.getElementById('badge-historico').textContent = lancamentos.length + ' lançamentos';
+
+      if (!sorted.length) {
+        document.getElementById('tbody-historico').innerHTML = estadoHtml('📅', 'Nenhum lançamento no período');
+        return;
+      }
+
+      document.getElementById('tbody-historico').innerHTML = sorted.map(l => {
+        const [scls, slabel] = statusLabel(l.statusAprovacao);
+        return `<tr>
+          <td class="td-mono">${fmtData(l.dataStr)}</td>
+          <td>${l.frenteNome || '—'}</td>
+          <td>${l.operadorNome || '—'}</td>
+          <td class="td-right td-mono">${l.totalColaboradores || 0}</td>
+          <td class="td-right td-mono">${(l.totalHoras || 0).toFixed(1)}h</td>
+          <td class="td-right td-mono">${R$(l.custoTotalLancado)}</td>
+          <td><span class="badge ${scls}">${slabel}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ══ ORÇADO VS REALIZADO ══
+    function renderOrcado(lancamentos, frentes) {
+      const aprovados = lancamentos.filter(l => l.statusAprovacao === 'aprovado');
+
+      // Custo realizado por frenteId
+      const realizado = {};
+      aprovados.forEach(l => {
+        const fid = l.frenteId;
+        if (!fid) return;
+        realizado[fid] = (realizado[fid] || 0) + (l.custoTotalLancado || 0);
+      });
+
+      // Montar rows com todas as frentes que têm orçamento
+      const rows = Object.entries(frentes)
+        .filter(([, f]) => f.ativa !== false)
+        .map(([fid, f]) => ({
+          nome:      f.nome,
+          orcado:    f.orcado || 0,
+          realizado: realizado[fid] || 0,
+        }))
+        .filter(r => r.orcado > 0 || r.realizado > 0)
+        .sort((a, b) => b.realizado - a.realizado);
+
+      const totalOrcado    = rows.reduce((s, r) => s + r.orcado, 0);
+      const totalRealizado = rows.reduce((s, r) => s + r.realizado, 0);
+      const saldo          = totalOrcado - totalRealizado;
+      const pctGeral       = totalOrcado > 0 ? (totalRealizado / totalOrcado) * 100 : 0;
+
+      document.getElementById('kpi-orcado').innerHTML = kpiHtml([
+        { label: 'Total orçado MOD',  valor: R$(totalOrcado),    cor: 'azul' },
+        { label: 'Total realizado',   valor: R$(totalRealizado), cor: saldo >= 0 ? 'verde' : 'verm' },
+        { label: 'Saldo disponível',  valor: R$(saldo),          cor: saldo >= 0 ? 'verde' : 'verm',
+          sub: saldo < 0 ? '⚠️ orçamento extrapolado' : '' },
+        { label: 'Consumo geral',     valor: pctGeral.toFixed(1) + '%', cor: pctGeral > 100 ? 'verm' : pctGeral > 80 ? 'laran' : 'verde' },
+      ]);
+
+      document.getElementById('badge-orcado').textContent = rows.length + ' frentes';
+
+      if (!rows.length) {
+        document.getElementById('tbody-orcado').innerHTML = estadoHtml('📊', 'Nenhuma frente com orçamento cadastrado', 'Cadastre frentes com valor orçado em Cadastros → Frentes de serviço');
+        return;
+      }
+
+      document.getElementById('tbody-orcado').innerHTML = rows.map(r => {
+        const saldoR = r.orcado - r.realizado;
+        const pctN   = r.orcado > 0 ? (r.realizado / r.orcado) * 100 : 0;
+        const cor    = corPct(pctN);
+        return `<tr>
+          <td>${r.nome}</td>
+          <td class="td-right td-mono">${R$(r.orcado)}</td>
+          <td class="td-right td-mono">${R$(r.realizado)}</td>
+          <td class="td-right td-mono" style="color:${saldoR < 0 ? 'var(--vermelho)' : 'var(--verde)'}">
+            ${saldoR < 0 ? '▼ ' : ''}${R$(Math.abs(saldoR))}
+          </td>
+          <td>
+            <div class="prog-wrap">
+              <div class="prog-bar-bg">
+                <div class="prog-bar-fill" style="width:${Math.min(pctN,100)}%;background:${cor}"></div>
+              </div>
+              <span class="prog-label" style="color:${cor}">${pctN.toFixed(1)}%</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    // ── Trocar aba ──
+    window.trocarAba = function(nome, btn) {
+      document.querySelectorAll('.painel').forEach(p => p.classList.remove('ativo'));
+      document.querySelectorAll('.aba').forEach(b => b.classList.remove('ativa'));
+      document.getElementById('painel-' + nome).classList.add('ativo');
+      btn.classList.add('ativa');
+    };
+  </script>
+</body>
+</html>
