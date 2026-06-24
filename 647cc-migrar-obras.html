@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Migração — Adicionar obraId aos usuários</title>
+  <style>
+    body { font-family: sans-serif; background: #F5F7FA; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .card { background: #fff; border-radius: 12px; padding: 32px; max-width: 520px; width: 100%; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    h2 { color: #06428E; margin-bottom: 8px; }
+    p  { color: #555; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+    label { font-size: 12px; font-weight: 700; color: #3A3A3A; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+    select, input { width: 100%; padding: 11px 13px; border: 1px solid #E8E8E8; border-radius: 6px; font-size: 14px; margin-bottom: 16px; background: #F5F7FA; outline: none; }
+    select:focus, input:focus { border-color: #06428E; background: #fff; }
+    button { background: #06428E; color: #fff; border: none; border-radius: 6px; padding: 13px 24px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
+    button:hover { background: #04316A; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #log { margin-top: 20px; background: #F5F7FA; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 13px; color: #333; max-height: 260px; overflow-y: auto; display: none; }
+    .ok   { color: #196B24; }
+    .skip { color: #8A8A8A; }
+    .err  { color: #CB0935; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h2>🔧 Migração de usuários</h2>
+  <p>Adiciona o campo <code>obras</code> em todos os usuários que ainda não o possuem.<br>
+     Usuários que já têm o campo <strong>não serão alterados</strong>.</p>
+
+  <label>Obra padrão a associar</label>
+  <select id="obraDefault">
+    <option value="647cc">647 CC — Célèbre Residence</option>
+    <option value="647cb">647 CB</option>
+    <option value="647cc,647cb">Ambas (647 CC + 647 CB)</option>
+  </select>
+
+  <label>Senha do administrador</label>
+  <input type="password" id="senha" placeholder="Sua senha atual"/>
+
+  <button id="btnRodar" onclick="rodar()">Executar migração</button>
+  <div id="log"></div>
+</div>
+
+<script type="module">
+  import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, doc, updateDoc }
+                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyATyTfAlXhjfaEbbNtGQqKXobpSO99a1mY",
+    authDomain:        "sistema-647cc.firebaseapp.com",
+    projectId:         "sistema-647cc",
+    storageBucket:     "sistema-647cc.firebasestorage.app",
+    messagingSenderId: "556262040392",
+    appId:             "1:556262040392:web:fdfddc34c5e10002aa097d"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  function log(msg, cls) {
+    const el = document.getElementById('log');
+    el.style.display = 'block';
+    el.innerHTML += `<div class="${cls||''}">${msg}</div>`;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  window.rodar = async function() {
+    const senha = document.getElementById('senha').value;
+    const obraValor = document.getElementById('obraDefault').value;
+    const obras = obraValor.split(',');
+
+    if (!senha) { alert('Informe sua senha.'); return; }
+
+    const btn = document.getElementById('btnRodar');
+    btn.disabled = true; btn.textContent = 'Executando…';
+    document.getElementById('log').innerHTML = '';
+
+    try {
+      // Autenticar para garantir permissão
+      const email = prompt('Seu e-mail de administrador:');
+      if (!email) { btn.disabled = false; btn.textContent = 'Executar migração'; return; }
+      await signInWithEmailAndPassword(auth, email, senha);
+      log('✓ Autenticado com sucesso.', 'ok');
+
+      const snap = await getDocs(collection(db, 'usuarios'));
+      log(`→ ${snap.size} usuário(s) encontrado(s).`);
+
+      let atualizados = 0;
+      let ignorados   = 0;
+
+      for (const d of snap.docs) {
+        const dados = d.data();
+        const nome  = dados.nome || dados.email || d.id;
+        if (Array.isArray(dados.obras) && dados.obras.length > 0) {
+          log(`⏭ ${nome} — já possui obras: [${dados.obras.join(', ')}]`, 'skip');
+          ignorados++;
+        } else {
+          await updateDoc(doc(db, 'usuarios', d.id), { obras });
+          log(`✓ ${nome} — obras adicionadas: [${obras.join(', ')}]`, 'ok');
+          atualizados++;
+        }
+      }
+
+      log('');
+      log(`✅ Concluído: ${atualizados} atualizado(s), ${ignorados} ignorado(s).`, 'ok');
+      btn.textContent = '✓ Migração concluída';
+    } catch(e) {
+      log('✗ Erro: ' + e.message, 'err');
+      btn.disabled = false; btn.textContent = 'Executar migração';
+    }
+  };
+</script>
+</body>
+</html>
