@@ -219,11 +219,55 @@
       vertical-align: middle; margin-right: 6px;
     }
 
+    /* ── Filtro colaborador ── */
+    .filtro-colab-wrap { position: relative; flex: 1; min-width: 200px; }
+    .filtro-colab-wrap label { font-size: 10px; font-weight: 700; color: var(--cinza-400); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px; }
+    .filtro-colab-input-row { display: flex; gap: 6px; align-items: center; }
+    .filtro-colab-input-row input[type=text] {
+      flex: 1; background: var(--cinza-100); border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 8px 12px;
+      font-size: 13px; font-family: 'Inter', sans-serif;
+      color: var(--cinza-900); outline: none;
+    }
+    .filtro-colab-input-row input[type=text]:focus { border-color: var(--azul); background: var(--branco); }
+    .btn-limpar-colab {
+      background: none; border: 1px solid var(--cinza-200);
+      border-radius: 6px; padding: 7px 10px;
+      color: var(--cinza-400); font-size: 12px; cursor: pointer;
+      font-family: 'Inter', sans-serif; white-space: nowrap;
+      transition: all 0.15s; display: none;
+    }
+    .btn-limpar-colab.visivel { display: block; }
+    .btn-limpar-colab:hover { color: var(--vermelho); border-color: var(--vermelho); }
+    .autocomplete-lista {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+      background: var(--branco); border: 1px solid var(--cinza-200);
+      border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      max-height: 220px; overflow-y: auto; display: none; margin-top: 4px;
+    }
+    .autocomplete-lista.aberta { display: block; }
+    .autocomplete-item {
+      padding: 10px 14px; cursor: pointer; font-size: 13px;
+      border-bottom: 1px solid var(--cinza-200); transition: background 0.1s;
+    }
+    .autocomplete-item:last-child { border-bottom: none; }
+    .autocomplete-item:hover { background: var(--azul-bg); }
+    .autocomplete-item .ac-funcao { font-size: 11px; color: var(--cinza-400); margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+    .colab-ativo-badge {
+      display: none; align-items: center; gap: 6px;
+      background: var(--azul-bg); border: 1px solid rgba(6,66,142,0.2);
+      border-radius: 6px; padding: 6px 12px; font-size: 12px;
+      font-weight: 600; color: var(--azul); margin-top: 6px;
+    }
+    .colab-ativo-badge.visivel { display: flex; }
+    .filtro-divider { width: 1px; height: 36px; background: var(--cinza-200); align-self: flex-end; margin: 0 4px; }
+
     @media (max-width: 600px) {
       .topbar { padding: 0 16px; }
       .filtro-bar { flex-direction: column; align-items: stretch; }
       .filtro-periodo-label { margin-left: 0; }
       .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .filtro-divider { display: none; }
     }
   </style>
 </head>
@@ -251,6 +295,16 @@
       <div class="filtro-campo">
         <label>Data fim</label>
         <input type="date" id="filtro-fim"/>
+      </div>
+      <div class="filtro-divider"></div>
+      <div class="filtro-colab-wrap" id="filtroColabWrap">
+        <label>Colaborador (opcional)</label>
+        <div class="filtro-colab-input-row">
+          <input type="text" id="filtro-colab-input" placeholder="Buscar por nome…" autocomplete="off"
+                 oninput="filtrarAutocomplete(this.value)" onfocus="abrirAutocomplete()" />
+          <button class="btn-limpar-colab" id="btnLimparColab" onclick="limparFiltroColab()">✕ Limpar</button>
+        </div>
+        <div class="autocomplete-lista" id="autocomplete-lista"></div>
       </div>
       <button class="btn-filtrar" id="btnFiltrar" onclick="aplicarFiltro()">Atualizar</button>
       <span class="filtro-periodo-label" id="labelPeriodo">—</span>
@@ -425,6 +479,8 @@
 
     const OBRAS_NOMES = { '647cc': '647 CC', '647cb': '647 CB' };
     let obraAtiva = '';
+    let todosColaboradores = []; // cache para autocomplete
+    let colabFiltroNome    = ''; // nome selecionado ('' = todos)
 
     // ── Helpers ──
     const R$ = v => v == null ? '—' : 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -477,11 +533,24 @@
 
       document.getElementById('topbarObraBadge').textContent = OBRAS_NOMES[obraAtiva] || obraAtiva.toUpperCase();
 
+      // Carregar lista de colaboradores para autocomplete
+      const snapC = await getDocs(query(collection(db, 'colaboradores'), where('obraId', '==', obraAtiva)));
+      todosColaboradores = snapC.docs
+        .map(d => d.data())
+        .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
       // Período padrão: mês atual
       const hoje = new Date();
       const ini  = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
       document.getElementById('filtro-inicio').value = ini.toISOString().split('T')[0];
       document.getElementById('filtro-fim').value    = hoje.toISOString().split('T')[0];
+
+      // Fechar autocomplete ao clicar fora
+      document.addEventListener('click', e => {
+        if (!document.getElementById('filtroColabWrap').contains(e.target)) {
+          document.getElementById('autocomplete-lista').classList.remove('aberta');
+        }
+      });
 
       await aplicarFiltro();
     });
@@ -492,7 +561,9 @@
       if (!inicio || !fim) { alert('Selecione data início e fim.'); return; }
       if (inicio > fim) { alert('Data início não pode ser maior que a data fim.'); return; }
 
-      document.getElementById('labelPeriodo').textContent = `${fmtData(inicio)} → ${fmtData(fim)}`;
+      // Rótulo do período + colaborador
+      const colabLabel = colabFiltroNome ? ` · ${colabFiltroNome}` : '';
+      document.getElementById('labelPeriodo').textContent = `${fmtData(inicio)} → ${fmtData(fim)}${colabLabel}`;
       document.getElementById('btnFiltrar').disabled = true;
       document.getElementById('btnFiltrar').innerHTML = '<span class="spinner-inline"></span>';
 
@@ -505,9 +576,21 @@
           collection(db, 'lancamentos_manha'),
           where('obraId', '==', obraAtiva)
         ));
-        const lancamentos = snap.docs
+        let lancamentos = snap.docs
           .map(d => ({ id: d.id, ...d.data() }))
           .filter(l => l.dataStr >= inicio && l.dataStr <= fim);
+
+        // Filtrar por colaborador se selecionado
+        if (colabFiltroNome) {
+          lancamentos = lancamentos
+            .map(l => {
+              const colabs = (l.colaboradores || []).filter(c =>
+                (c.nome || '').toLowerCase() === colabFiltroNome.toLowerCase()
+              );
+              return colabs.length ? { ...l, colaboradores: colabs } : null;
+            })
+            .filter(Boolean);
+        }
 
         // Buscar frentes da obra
         const snapF = await getDocs(query(
@@ -781,6 +864,44 @@
       document.querySelectorAll('.aba').forEach(b => b.classList.remove('ativa'));
       document.getElementById('painel-' + nome).classList.add('ativo');
       btn.classList.add('ativa');
+    };
+
+    // ── Autocomplete de colaborador ──
+    window.abrirAutocomplete = function() {
+      filtrarAutocomplete(document.getElementById('filtro-colab-input').value);
+    };
+
+    window.filtrarAutocomplete = function(termo) {
+      const lista = document.getElementById('autocomplete-lista');
+      const termoBx = termo.toLowerCase().trim();
+      const filtrados = termoBx.length === 0
+        ? todosColaboradores.slice(0, 30)
+        : todosColaboradores.filter(c => (c.nome || '').toLowerCase().includes(termoBx)).slice(0, 30);
+
+      if (!filtrados.length) {
+        lista.innerHTML = '<div class="autocomplete-item" style="color:var(--cinza-400)">Nenhum colaborador encontrado</div>';
+      } else {
+        lista.innerHTML = filtrados.map(c => `
+          <div class="autocomplete-item" onclick="selecionarColab('${c.nome.replace(/'/g, "\\'")}')">
+            <div>${c.nome}</div>
+            <div class="ac-funcao">${c.funcao || '—'} · Mat. ${c.matricula || '—'}</div>
+          </div>`).join('');
+      }
+      lista.classList.add('aberta');
+    };
+
+    window.selecionarColab = function(nome) {
+      colabFiltroNome = nome;
+      document.getElementById('filtro-colab-input').value = nome;
+      document.getElementById('autocomplete-lista').classList.remove('aberta');
+      document.getElementById('btnLimparColab').classList.add('visivel');
+    };
+
+    window.limparFiltroColab = function() {
+      colabFiltroNome = '';
+      document.getElementById('filtro-colab-input').value = '';
+      document.getElementById('btnLimparColab').classList.remove('visivel');
+      document.getElementById('autocomplete-lista').classList.remove('aberta');
     };
   </script>
 </body>
